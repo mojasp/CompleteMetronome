@@ -56,6 +56,18 @@
         <div class="transport">
           <button class="transport-button" id="toggle-play" type="button">Start</button>
           <p class="transport-hint">Space to start/stop</p>
+          <button class="trainer-disclosure" id="trainer-disclosure" type="button" aria-expanded="false" aria-controls="trainer-panel">
+            Trainer
+          </button>
+          <div class="trainer-panel" id="trainer-panel">
+            <div class="trainer-controls">
+              <select id="trainer-bars" aria-label="Trainer bars interval"></select>
+              <span class="trainer-separator" aria-hidden="true">bars</span>
+              <select id="trainer-bpm" aria-label="Trainer tempo increment"></select>
+              <span class="trainer-separator" aria-hidden="true">BPM</span>
+              <button class="trainer-toggle" id="trainer-toggle" type="button">Enable</button>
+            </div>
+          </div>
         </div>
 
         <div class="selectors">
@@ -83,7 +95,25 @@
       <section class="panel grid-panel">
         <div class="grid-header">
           <p class="label">Current bar</p>
-          <p class="grid-legend">Click a cell to cycle: Accent → Regular → Mute</p>
+          <div class="accent-controls">
+            <button
+              class="accent-disclosure"
+              id="accent-disclosure"
+              type="button"
+              aria-expanded="false"
+              aria-controls="accent-panel"
+            >
+              Accent: every bar
+            </button>
+            <div class="accent-panel" id="accent-panel">
+              <div class="accent-panel-inner">
+                <span class="accent-label">Accent every</span>
+                <select id="accent-bars" aria-label="Accent every X bars"></select>
+                <span class="accent-label">bars</span>
+                <button class="accent-toggle" id="accent-toggle" type="button">Enable</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="subdivision-grid" id="subdivision-grid" aria-live="polite"></div>
       </section>

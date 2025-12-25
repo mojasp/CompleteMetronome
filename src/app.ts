@@ -20,6 +20,15 @@ const tempoDisplay = getElement<HTMLDivElement>("tempo-display");
 const tempoWheel = getElement<HTMLDivElement>("tempo-wheel");
 const soundProfileSelect = getElement<HTMLSelectElement>("sound-profile");
 const togglePlay = getElement<HTMLButtonElement>("toggle-play");
+const trainerDisclosure = getElement<HTMLButtonElement>("trainer-disclosure");
+const trainerPanel = getElement<HTMLDivElement>("trainer-panel");
+const trainerBarsSelect = getElement<HTMLSelectElement>("trainer-bars");
+const trainerBpmSelect = getElement<HTMLSelectElement>("trainer-bpm");
+const trainerToggle = getElement<HTMLButtonElement>("trainer-toggle");
+const accentDisclosure = getElement<HTMLButtonElement>("accent-disclosure");
+const accentPanel = getElement<HTMLDivElement>("accent-panel");
+const accentBarsSelect = getElement<HTMLSelectElement>("accent-bars");
+const accentToggle = getElement<HTMLButtonElement>("accent-toggle");
 const timeSignatureNumeratorSelect = getElement<HTMLSelectElement>("time-signature-numerator");
 const timeSignatureDenominatorSelect = getElement<HTMLSelectElement>("time-signature-denominator");
 const subdivisionSelect = getElement<HTMLSelectElement>("subdivision");
@@ -37,7 +46,7 @@ type Subdivision = {
 
 type SoundProfileOption = SoundProfile & { label: string };
 
-const MAX_NUMERATOR = 12;
+const MAX_NUMERATOR = 32;
 const NUMERATORS = Array.from({ length: MAX_NUMERATOR - 1 }, (_, index) => index + 2);
 const DENOMINATORS = [1, 2, 4, 8, 16];
 const TIME_SIGNATURES: TimeSignature[] = NUMERATORS.map((beats) => ({
@@ -78,6 +87,9 @@ const SOUND_PROFILES: SoundProfileOption[] = [
 const BPM_MIN = 20;
 const BPM_MAX = 300;
 const BPM_PER_DEGREE = 0.25;
+const TRAINER_BARS = Array.from({ length: 12 }, (_, index) => index + 1);
+const TRAINER_BPM_STEPS = [1, 2, 3, 4, 5, 8, 10];
+const ACCENT_BARS = Array.from({ length: 64 }, (_, index) => index + 1);
 
 type MetronomeState = {
   bpm: number;
@@ -88,6 +100,12 @@ type MetronomeState = {
   soundProfileIndex: number;
   activeIndex: number;
   soundStates: SoundState[];
+  trainerBarsIndex: number;
+  trainerBpmIndex: number;
+  trainerEnabled: boolean;
+  barCount: number;
+  accentBarsIndex: number;
+  accentEnabled: boolean;
 };
 
 const state: MetronomeState = {
@@ -99,6 +117,12 @@ const state: MetronomeState = {
   soundProfileIndex: 1,
   activeIndex: -1,
   soundStates: [],
+  trainerBarsIndex: 3,
+  trainerBpmIndex: 1,
+  trainerEnabled: false,
+  barCount: 0,
+  accentBarsIndex: 0,
+  accentEnabled: false,
 };
 
 const ui = createUI({
@@ -108,6 +132,7 @@ const ui = createUI({
   tempoUp,
   tempoDown,
   togglePlay,
+  trainerToggle,
   subdivisionSelect,
   subdivisionGrid,
 });
@@ -138,6 +163,21 @@ function initSoundStates() {
 function render() {
   ui.setTempoDisplay(state.bpm);
   ui.setPlayState(state.isPlaying);
+  ui.setTrainerState(state.trainerEnabled);
+  const trainerBars = TRAINER_BARS[state.trainerBarsIndex];
+  const trainerStep = TRAINER_BPM_STEPS[state.trainerBpmIndex];
+  trainerDisclosure.textContent = state.trainerEnabled
+    ? `Trainer: +${trainerStep} BPM / ${trainerBars} bars`
+    : "Trainer: off";
+  const accentBars = ACCENT_BARS[state.accentBarsIndex];
+  accentDisclosure.textContent = state.accentEnabled
+    ? accentBars === 1
+      ? "Accent: every bar"
+      : `Accent: every ${accentBars} bars`
+    : "Accent";
+  accentDisclosure.classList.toggle("is-enabled", state.accentEnabled);
+  accentToggle.textContent = state.accentEnabled ? "Enabled" : "Enable";
+  accentToggle.classList.toggle("is-enabled", state.accentEnabled);
   updateWheelDisplay();
   ui.renderSubdivisionGrid({
     totalSubdivisions: totalSubdivisions(),
@@ -163,6 +203,8 @@ async function startPlayback() {
   const timeSignature = TIME_SIGNATURES[state.timeSignatureNumeratorIndex];
   const subdivision = SUBDIVISIONS[state.subdivisionIndex];
 
+  state.barCount = 0;
+
   await audio.start({
     bpm: state.bpm,
     beatsPerBar: timeSignature.beatsPerBar,
@@ -171,8 +213,32 @@ async function startPlayback() {
     onTick: (tickIndex: number) => {
       state.activeIndex = tickIndex;
       ui.setActiveSubdivision(tickIndex);
+      if (tickIndex === 0) {
+        if (state.trainerEnabled) {
+          const barsInterval = TRAINER_BARS[state.trainerBarsIndex];
+          if (state.barCount % barsInterval === 0) {
+            const increment = TRAINER_BPM_STEPS[state.trainerBpmIndex];
+            setTempo(state.bpm + increment);
+          }
+        }
+      }
     },
-    getSoundState: (tickIndex: number) => state.soundStates[tickIndex] || "mute",
+    getSoundState: (tickIndex: number) => {
+      const baseState = state.soundStates[tickIndex] || "mute";
+      if (tickIndex !== 0) {
+        return baseState;
+      }
+      state.barCount += 1;
+      if (!state.accentEnabled) {
+        return baseState;
+      }
+      const accentEvery = ACCENT_BARS[state.accentBarsIndex];
+      const shouldAccent = (state.barCount - 1) % accentEvery === 0;
+      if (shouldAccent) {
+        return "A";
+      }
+      return baseState === "mute" ? "mute" : "B";
+    },
   });
 }
 
@@ -181,6 +247,7 @@ async function togglePlayback() {
     state.isPlaying = false;
     audio.stop();
     state.activeIndex = -1;
+    state.barCount = 0;
     render();
     return;
   }
@@ -282,10 +349,25 @@ function setupControls() {
   );
   ui.populateSelect(subdivisionSelect, SUBDIVISIONS);
   ui.populateSelect(soundProfileSelect, SOUND_PROFILES);
+  ui.populateSelect(
+    trainerBarsSelect,
+    TRAINER_BARS.map((value) => ({ label: String(value) })),
+  );
+  ui.populateSelect(
+    trainerBpmSelect,
+    TRAINER_BPM_STEPS.map((value) => ({ label: String(value) })),
+  );
+  ui.populateSelect(
+    accentBarsSelect,
+    ACCENT_BARS.map((value) => ({ label: String(value) })),
+  );
   ui.setSelectValue(timeSignatureNumeratorSelect, state.timeSignatureNumeratorIndex);
   ui.setSelectValue(timeSignatureDenominatorSelect, state.timeSignatureDenominatorIndex);
   ui.setSelectValue(subdivisionSelect, state.subdivisionIndex);
   ui.setSelectValue(soundProfileSelect, state.soundProfileIndex);
+  ui.setSelectValue(trainerBarsSelect, state.trainerBarsIndex);
+  ui.setSelectValue(trainerBpmSelect, state.trainerBpmIndex);
+  ui.setSelectValue(accentBarsSelect, state.accentBarsIndex);
 
   const unlockAudio = () => {
     void audio.resume();
@@ -349,6 +431,26 @@ function setupControls() {
     void togglePlayback();
   });
 
+  trainerDisclosure.addEventListener("click", () => {
+    const isOpen = trainerPanel.classList.toggle("is-open");
+    trainerDisclosure.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  accentDisclosure.addEventListener("click", () => {
+    const isOpen = accentPanel.classList.toggle("is-open");
+    accentDisclosure.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  accentToggle.addEventListener("click", () => {
+    state.accentEnabled = !state.accentEnabled;
+    render();
+  });
+
+  trainerToggle.addEventListener("click", () => {
+    state.trainerEnabled = !state.trainerEnabled;
+    render();
+  });
+
   timeSignatureNumeratorSelect.addEventListener("change", (event: Event) => {
     const target = event.target as HTMLSelectElement | null;
     if (!target) {
@@ -388,6 +490,33 @@ function setupControls() {
       return;
     }
     setSoundProfile(Number(target.value));
+  });
+
+  trainerBarsSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.trainerBarsIndex = Number(target.value);
+    render();
+  });
+
+  trainerBpmSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.trainerBpmIndex = Number(target.value);
+    render();
+  });
+
+  accentBarsSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.accentBarsIndex = Number(target.value);
+    render();
   });
 
   subdivisionGrid.addEventListener("click", (event: MouseEvent) => {
