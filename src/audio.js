@@ -32,6 +32,18 @@ export function createMetronomeAudio() {
   let subdivisionsPerBeat = 1;
   let onTick = () => {};
   let getSoundState = () => "mute";
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+
+  function ensureAudioContext() {
+    if (audioCtx) {
+      return audioCtx;
+    }
+    if (!AudioContextCtor) {
+      throw new Error("Web Audio API not supported.");
+    }
+    audioCtx = new AudioContextCtor();
+    return audioCtx;
+  }
 
   function secondsPerSubdivision() {
     return (60 / bpm) / subdivisionsPerBeat;
@@ -64,13 +76,10 @@ export function createMetronomeAudio() {
       onTick: nextOnTick,
       getSoundState: nextSoundState,
     }) {
-      if (!audioCtx) {
-        audioCtx = new AudioContext();
+      const ctx = ensureAudioContext();
+      if (ctx.state === "suspended" || ctx.state === "interrupted") {
+        await ctx.resume();
       }
-      if (audioCtx.state === "suspended") {
-        await audioCtx.resume();
-      }
-
       bpm = nextBpm;
       beatsPerBar = nextBeatsPerBar;
       subdivisionsPerBeat = nextSubdivisions;
@@ -86,6 +95,12 @@ export function createMetronomeAudio() {
       if (timerId) {
         clearInterval(timerId);
         timerId = null;
+      }
+    },
+    async resume() {
+      const ctx = ensureAudioContext();
+      if (ctx.state === "suspended" || ctx.state === "interrupted") {
+        await ctx.resume();
       }
     },
     update({ bpm: nextBpm, beatsPerBar: nextBeats, subdivisionsPerBeat: nextSubdivs }) {

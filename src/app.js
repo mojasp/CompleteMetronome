@@ -30,7 +30,7 @@ const state = {
   bpm: 120,
   isPlaying: false,
   timeSignatureIndex: 0,
-  subdivisionIndex: 1,
+  subdivisionIndex: 0,
   activeIndex: 0,
   soundStates: [],
 };
@@ -92,11 +92,11 @@ function updateAudioSettings() {
   });
 }
 
-function startPlayback() {
+async function startPlayback() {
   const timeSignature = TIME_SIGNATURES[state.timeSignatureIndex];
   const subdivision = SUBDIVISIONS[state.subdivisionIndex];
 
-  audio.start({
+  await audio.start({
     bpm: state.bpm,
     beatsPerBar: timeSignature.beatsPerBar,
     subdivisionsPerBeat: subdivision.perBeat,
@@ -108,13 +108,21 @@ function startPlayback() {
   });
 }
 
-function togglePlayback() {
-  state.isPlaying = !state.isPlaying;
+async function togglePlayback() {
   if (state.isPlaying) {
-    startPlayback();
-  } else {
+    state.isPlaying = false;
     audio.stop();
     state.activeIndex = 0;
+    render();
+    return;
+  }
+
+  state.isPlaying = true;
+  try {
+    await startPlayback();
+  } catch (error) {
+    console.warn("Failed to start audio playback.", error);
+    state.isPlaying = false;
   }
   render();
 }
@@ -131,6 +139,16 @@ function setupControls() {
   ui.setSelectValue(timeSignatureSelect, state.timeSignatureIndex);
   ui.setSelectValue(subdivisionSelect, state.subdivisionIndex);
 
+  const unlockAudio = () => {
+    void audio.resume();
+  };
+  ["pointerdown", "touchstart", "mousedown"].forEach((eventName) => {
+    document.addEventListener(eventName, unlockAudio, {
+      once: true,
+      passive: true,
+    });
+  });
+
   tempoUp.addEventListener("click", () => adjustTempo(1));
   tempoDown.addEventListener("click", () => adjustTempo(-1));
 
@@ -139,7 +157,9 @@ function setupControls() {
     adjustTempo(event.deltaY > 0 ? -1 : 1);
   });
 
-  togglePlay.addEventListener("click", togglePlayback);
+  togglePlay.addEventListener("click", () => {
+    void togglePlayback();
+  });
 
   timeSignatureSelect.addEventListener("change", (event) => {
     state.timeSignatureIndex = Number(event.target.value);
