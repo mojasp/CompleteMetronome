@@ -73,6 +73,27 @@ h1 {
   align-items: center;
 }
 
+.tempo-block {
+  order: 1;
+}
+
+.transport-main {
+  order: 2;
+}
+
+.transport-tools {
+  order: 3;
+}
+
+.selectors {
+  order: 4;
+}
+
+.grid-panel {
+  order: 5;
+  grid-column: 1 / -1;
+}
+
 .label {
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -348,6 +369,7 @@ select {
 .grid-panel {
   display: grid;
   gap: 16px;
+  width: 100%;
 }
 
 .grid-header {
@@ -465,6 +487,26 @@ select {
   .selectors {
     justify-items: center;
     text-align: center;
+  }
+
+  .tempo-block {
+    order: 1;
+  }
+
+  .transport-main {
+    order: 2;
+  }
+
+  .grid-panel {
+    order: 3;
+  }
+
+  .transport-tools {
+    order: 4;
+  }
+
+  .selectors {
+    order: 5;
   }
 
   .tempo-display {

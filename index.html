@@ -41,9 +41,12 @@
           <p class="tempo-hint tempo-hint--desktop">Drag, scroll or click to adjust tempo.</p>
         </div>
 
-        <div class="transport">
+        <div class="transport transport-main">
           <button class="transport-button" id="toggle-play" type="button">Start</button>
           <p class="transport-hint">Space to start/stop</p>
+        </div>
+
+        <div class="transport transport-tools">
           <button
             class="trainer-disclosure"
             id="trainer-disclosure"
@@ -120,31 +123,30 @@
             <select id="sound-profile"></select>
           </label>
         </div>
-      </section>
 
-      <section class="panel grid-panel">
-        <div class="grid-header">
-          <p class="label">Current bar</p>
-          <div class="accent-controls">
-            <button
-              class="accent-disclosure"
-              id="accent-disclosure"
-              type="button"
-              aria-expanded="false"
-              aria-controls="accent-panel"
-            >
-              Accent: every bar
-            </button>
-            <div class="accent-panel" id="accent-panel">
-              <div class="accent-panel-inner">
-                <span class="accent-label">Every</span>
-                <select id="accent-bars" aria-label="Accent every X bars"></select>
-                <span class="accent-label">bars</span>
+        <div class="grid-panel">
+          <div class="grid-header">
+            <div class="accent-controls">
+              <button
+                class="accent-disclosure"
+                id="accent-disclosure"
+                type="button"
+                aria-expanded="false"
+                aria-controls="accent-panel"
+              >
+                Accent
+              </button>
+              <div class="accent-panel" id="accent-panel">
+                <div class="accent-panel-inner">
+                  <span class="accent-label">Every</span>
+                  <select id="accent-bars" aria-label="Accent every X bars"></select>
+                  <span class="accent-label">bars</span>
+                </div>
               </div>
             </div>
           </div>
+          <div class="subdivision-grid" id="subdivision-grid" aria-live="polite"></div>
         </div>
-        <div class="subdivision-grid" id="subdivision-grid" aria-live="polite"></div>
       </section>
     </main>
 

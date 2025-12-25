@@ -584,6 +584,7 @@ function setupControls() {
       return;
     }
     state.randomMuteEnabled = true;
+    state.randomMuteConfigured = true;
     randomMutePanel.classList.add("is-open");
     randomMuteDisclosure.setAttribute("aria-expanded", "true");
     render();
