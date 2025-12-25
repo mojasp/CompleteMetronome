@@ -104,10 +104,12 @@ type MetronomeState = {
   trainerSecondsIndex: number;
   trainerSecondsBpmIndex: number;
   trainerMode: "bars" | "seconds";
+  trainerConfigured: boolean;
   trainerEnabled: boolean;
   barCount: number;
   accentBarsIndex: number;
   accentEnabled: boolean;
+  accentConfigured: boolean;
 };
 
 const state: MetronomeState = {
@@ -124,10 +126,12 @@ const state: MetronomeState = {
   trainerSecondsIndex: 0,
   trainerSecondsBpmIndex: 1,
   trainerMode: "bars",
+  trainerConfigured: false,
   trainerEnabled: false,
   barCount: 0,
   accentBarsIndex: ACCENT_BARS.indexOf(12),
   accentEnabled: false,
+  accentConfigured: false,
 };
 
 const ui = createUI({
@@ -168,7 +172,7 @@ function render() {
   ui.setPlayState(state.isPlaying);
   const trainerBars = TRAINER_BARS[state.trainerBarsIndex];
   const trainerStep = TRAINER_BPM_STEPS[state.trainerBpmIndex];
-  trainerDisclosure.textContent = state.trainerEnabled
+  trainerDisclosure.textContent = state.trainerConfigured
     ? state.trainerMode === "seconds"
       ? `Trainer: +${TRAINER_BPM_STEPS[state.trainerSecondsBpmIndex]} BPM every ${
           TRAINER_SECONDS[state.trainerSecondsIndex]
@@ -176,9 +180,13 @@ function render() {
       : `Trainer: +${trainerStep} BPM every ${trainerBars} bars`
     : "Trainer";
   trainerDisclosure.classList.toggle("is-enabled", state.trainerEnabled);
+  trainerDisclosure.classList.toggle("is-disabled", !state.trainerEnabled);
   const accentBars = ACCENT_BARS[state.accentBarsIndex];
-  accentDisclosure.textContent = state.accentEnabled ? `Accent every ${accentBars} bars` : "Accent";
+  accentDisclosure.textContent = state.accentConfigured
+    ? `Accent every ${accentBars} bars`
+    : "Accent";
   accentDisclosure.classList.toggle("is-enabled", state.accentEnabled);
+  accentDisclosure.classList.toggle("is-disabled", !state.accentEnabled);
   updateWheelDisplay();
   ui.renderSubdivisionGrid({
     totalSubdivisions: totalSubdivisions(),
@@ -567,6 +575,7 @@ function setupControls() {
     }
     state.trainerBarsIndex = Number(target.value);
     state.trainerMode = "bars";
+    state.trainerConfigured = true;
     stopTrainerInterval();
     render();
   });
@@ -578,6 +587,7 @@ function setupControls() {
     }
     state.trainerBpmIndex = Number(target.value);
     state.trainerMode = "bars";
+    state.trainerConfigured = true;
     stopTrainerInterval();
     render();
   });
@@ -589,6 +599,7 @@ function setupControls() {
     }
     state.trainerSecondsIndex = Number(target.value);
     state.trainerMode = "seconds";
+    state.trainerConfigured = true;
     startTrainerInterval();
     render();
   });
@@ -600,6 +611,7 @@ function setupControls() {
     }
     state.trainerSecondsBpmIndex = Number(target.value);
     state.trainerMode = "seconds";
+    state.trainerConfigured = true;
     startTrainerInterval();
     render();
   });
@@ -610,6 +622,7 @@ function setupControls() {
       return;
     }
     state.accentBarsIndex = Number(target.value);
+    state.accentConfigured = true;
     render();
   });
 

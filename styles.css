@@ -251,6 +251,11 @@ h1 {
   color: white;
 }
 
+.trainer-disclosure.is-disabled {
+  border-color: rgba(31, 28, 26, 0.12);
+  color: rgba(31, 28, 26, 0.45);
+}
+
 .trainer-panel {
   display: none;
 }
@@ -346,6 +351,10 @@ select {
   color: white;
 }
 
+.accent-disclosure.is-disabled {
+  border-color: rgba(31, 28, 26, 0.12);
+  color: rgba(31, 28, 26, 0.45);
+}
 .accent-panel {
   display: none;
 }
