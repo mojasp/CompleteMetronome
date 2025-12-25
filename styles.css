@@ -515,8 +515,8 @@ select {
 
   .tempo-wheel {
     display: grid;
-    width: 220px;
-    height: 220px;
+    width: 190px;
+    height: 190px;
   }
 
   .tempo-hint--desktop {
