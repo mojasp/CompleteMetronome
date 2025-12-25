@@ -33,6 +33,9 @@ const randomMuteCountInBarsSelect = getElement<HTMLSelectElement>("random-mute-c
 const accentDisclosure = getElement<HTMLButtonElement>("accent-disclosure");
 const accentPanel = getElement<HTMLDivElement>("accent-panel");
 const accentBarsSelect = getElement<HTMLSelectElement>("accent-bars");
+const accentHost = getElement<HTMLDivElement>("accent-host");
+const accentBlock = getElement<HTMLDivElement>("accent-block");
+const selectors = getElement<HTMLDivElement>("selectors");
 const timeSignatureNumeratorSelect = getElement<HTMLSelectElement>("time-signature-numerator");
 const timeSignatureDenominatorSelect = getElement<HTMLSelectElement>("time-signature-denominator");
 const subdivisionSelect = getElement<HTMLSelectElement>("subdivision");
@@ -410,6 +413,21 @@ function updateWheelDisplay() {
   tempoWheel.setAttribute("aria-valuenow", String(state.bpm));
 }
 
+function syncAccentPlacement() {
+  const isMobile = window.matchMedia("(max-width: 720px)").matches;
+  if (isMobile) {
+    if (accentBlock.parentElement !== selectors) {
+      selectors.appendChild(accentBlock);
+    }
+    accentBlock.classList.remove("is-inline");
+  } else {
+    if (accentBlock.parentElement !== accentHost) {
+      accentHost.appendChild(accentBlock);
+    }
+    accentBlock.classList.add("is-inline");
+  }
+}
+
 function attachWheelControls() {
   if (!window.matchMedia("(max-width: 720px)").matches) {
     return;
@@ -553,10 +571,14 @@ function setupControls() {
   });
 
   attachWheelControls();
+  syncAccentPlacement();
 
   togglePlay.addEventListener("click", () => {
     void togglePlayback();
   });
+
+  const accentMedia = window.matchMedia("(max-width: 720px)");
+  accentMedia.addEventListener("change", syncAccentPlacement);
 
   trainerDisclosure.addEventListener("click", () => {
     if (state.trainerEnabled) {

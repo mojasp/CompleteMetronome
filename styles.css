@@ -94,6 +94,39 @@ h1 {
   grid-column: 1 / -1;
 }
 
+@media (min-width: 721px) {
+  .controls {
+    grid-template-columns: 1.1fr 1fr;
+    grid-template-areas:
+      "tempo selectors"
+      "transport selectors"
+      "tools selectors"
+      "grid grid";
+    align-items: start;
+  }
+
+  .tempo-block {
+    grid-area: tempo;
+  }
+
+  .transport-main {
+    grid-area: transport;
+  }
+
+  .transport-tools {
+    grid-area: tools;
+  }
+
+  .selectors {
+    grid-area: selectors;
+    grid-template-columns: 1fr;
+  }
+
+  .grid-panel {
+    grid-area: grid;
+  }
+}
+
 .label {
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -308,11 +341,26 @@ h1 {
   grid-column: 2;
 }
 
+.accent-block.is-inline .label {
+  display: none;
+}
+
 .select-field {
   display: grid;
   gap: 8px;
   font-family: var(--font-display);
   font-size: 0.9rem;
+}
+
+@media (min-width: 721px) {
+  .selectors {
+    grid-template-columns: 1fr;
+  }
+
+  .select-field--sound,
+  .select-field--accent {
+    grid-column: auto;
+  }
 }
 
 .time-signature-controls {
@@ -378,6 +426,18 @@ select {
   display: grid;
   gap: 16px;
   width: 100%;
+}
+
+.grid-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.accent-host {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .accent-controls {

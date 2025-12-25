@@ -101,7 +101,7 @@
           </div>
         </div>
 
-        <div class="selectors">
+        <div class="selectors" id="selectors">
           <label class="select-field">
             <span class="label">Time signature</span>
             <div class="time-signature-controls">
@@ -121,7 +121,7 @@
             <select id="sound-profile"></select>
           </label>
 
-          <label class="select-field select-field--accent">
+          <div class="select-field select-field--accent accent-block" id="accent-block">
             <span class="label">Accent</span>
             <div class="accent-controls">
               <button
@@ -141,10 +141,13 @@
                 </div>
               </div>
             </div>
-          </label>
+          </div>
         </div>
 
         <div class="grid-panel">
+          <div class="grid-header">
+            <div class="accent-host" id="accent-host"></div>
+          </div>
           <div class="subdivision-grid" id="subdivision-grid" aria-live="polite"></div>
         </div>
       </section>
