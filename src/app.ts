@@ -568,6 +568,7 @@ function setupControls() {
       return;
     }
     state.trainerEnabled = true;
+    state.trainerConfigured = true;
     trainerPanel.classList.add("is-open");
     trainerDisclosure.setAttribute("aria-expanded", "true");
     startTrainerInterval();
@@ -597,6 +598,7 @@ function setupControls() {
       return;
     }
     state.accentEnabled = true;
+    state.accentConfigured = true;
     accentPanel.classList.add("is-open");
     accentDisclosure.setAttribute("aria-expanded", "true");
     render();

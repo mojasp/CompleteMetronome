@@ -30,48 +30,7 @@ body {
   overflow-x: hidden;
 }
 
-.background-shapes {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-}
 
-.shape {
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(0);
-  opacity: 0.6;
-}
-
-.shape-a {
-  width: 320px;
-  height: 320px;
-  background: #ffe1d6;
-  top: -80px;
-  left: -60px;
-}
-
-.shape-b {
-  width: 420px;
-  height: 420px;
-  background: #d7f0ec;
-  bottom: -160px;
-  right: -120px;
-}
-
-.shape-c {
-  width: 200px;
-  height: 200px;
-  background: #f9e8a8;
-  top: 30%;
-  right: 15%;
-}
-
-.app-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
 
 .app-kicker {
   text-transform: uppercase;
