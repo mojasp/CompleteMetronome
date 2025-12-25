@@ -97,7 +97,7 @@ const state: MetronomeState = {
   timeSignatureDenominatorIndex: DENOMINATORS.indexOf(4),
   subdivisionIndex: 0,
   soundProfileIndex: 1,
-  activeIndex: 0,
+  activeIndex: -1,
   soundStates: [],
 };
 
@@ -180,7 +180,7 @@ async function togglePlayback() {
   if (state.isPlaying) {
     state.isPlaying = false;
     audio.stop();
-    state.activeIndex = 0;
+    state.activeIndex = -1;
     render();
     return;
   }
