@@ -287,7 +287,12 @@ h1 {
 
 .trainer-controls {
   display: grid;
-  grid-template-columns: 1fr auto 1fr auto auto;
+  gap: 10px;
+}
+
+.trainer-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
   align-items: center;
   gap: 8px;
 }

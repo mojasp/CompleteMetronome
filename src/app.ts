@@ -22,6 +22,8 @@ const trainerDisclosure = getElement<HTMLButtonElement>("trainer-disclosure");
 const trainerPanel = getElement<HTMLDivElement>("trainer-panel");
 const trainerBarsSelect = getElement<HTMLSelectElement>("trainer-bars");
 const trainerBpmSelect = getElement<HTMLSelectElement>("trainer-bpm");
+const trainerSecondsSelect = getElement<HTMLSelectElement>("trainer-seconds");
+const trainerSecondsBpmSelect = getElement<HTMLSelectElement>("trainer-seconds-bpm");
 const accentDisclosure = getElement<HTMLButtonElement>("accent-disclosure");
 const accentPanel = getElement<HTMLDivElement>("accent-panel");
 const accentBarsSelect = getElement<HTMLSelectElement>("accent-bars");
@@ -85,6 +87,7 @@ const BPM_MAX = 300;
 const BPM_PER_DEGREE = 0.25;
 const TRAINER_BARS = Array.from({ length: 12 }, (_, index) => index + 1);
 const TRAINER_BPM_STEPS = [1, 2, 3, 4, 5, 8, 10];
+const TRAINER_SECONDS = Array.from({ length: 36 }, (_, index) => (index + 1) * 10);
 const ACCENT_BARS = Array.from({ length: 63 }, (_, index) => index + 2);
 
 type MetronomeState = {
@@ -98,6 +101,9 @@ type MetronomeState = {
   soundStates: SoundState[];
   trainerBarsIndex: number;
   trainerBpmIndex: number;
+  trainerSecondsIndex: number;
+  trainerSecondsBpmIndex: number;
+  trainerMode: "bars" | "seconds";
   trainerEnabled: boolean;
   barCount: number;
   accentBarsIndex: number;
@@ -115,6 +121,9 @@ const state: MetronomeState = {
   soundStates: [],
   trainerBarsIndex: 3,
   trainerBpmIndex: 1,
+  trainerSecondsIndex: 0,
+  trainerSecondsBpmIndex: 1,
+  trainerMode: "bars",
   trainerEnabled: false,
   barCount: 0,
   accentBarsIndex: ACCENT_BARS.indexOf(12),
@@ -131,6 +140,7 @@ const ui = createUI({
 });
 
 const audio = createMetronomeAudio();
+let trainerIntervalId: ReturnType<typeof setInterval> | null = null;
 
 function totalSubdivisions() {
   return (
@@ -159,7 +169,11 @@ function render() {
   const trainerBars = TRAINER_BARS[state.trainerBarsIndex];
   const trainerStep = TRAINER_BPM_STEPS[state.trainerBpmIndex];
   trainerDisclosure.textContent = state.trainerEnabled
-    ? `Trainer: +${trainerStep} BPM every ${trainerBars} bars`
+    ? state.trainerMode === "seconds"
+      ? `Trainer: +${TRAINER_BPM_STEPS[state.trainerSecondsBpmIndex]} BPM every ${
+          TRAINER_SECONDS[state.trainerSecondsIndex]
+        } seconds`
+      : `Trainer: +${trainerStep} BPM every ${trainerBars} bars`
     : "Trainer";
   trainerDisclosure.classList.toggle("is-enabled", state.trainerEnabled);
   const accentBars = ACCENT_BARS[state.accentBarsIndex];
@@ -186,11 +200,31 @@ function updateAudioSettings() {
   });
 }
 
+function stopTrainerInterval() {
+  if (trainerIntervalId) {
+    clearInterval(trainerIntervalId);
+    trainerIntervalId = null;
+  }
+}
+
+function startTrainerInterval() {
+  stopTrainerInterval();
+  if (!state.isPlaying || !state.trainerEnabled || state.trainerMode !== "seconds") {
+    return;
+  }
+  const intervalSeconds = TRAINER_SECONDS[state.trainerSecondsIndex];
+  const increment = TRAINER_BPM_STEPS[state.trainerSecondsBpmIndex];
+  trainerIntervalId = setInterval(() => {
+    setTempo(state.bpm + increment);
+  }, intervalSeconds * 1000);
+}
+
 async function startPlayback() {
   const timeSignature = TIME_SIGNATURES[state.timeSignatureNumeratorIndex];
   const subdivision = SUBDIVISIONS[state.subdivisionIndex];
 
   state.barCount = 0;
+  startTrainerInterval();
 
   await audio.start({
     bpm: state.bpm,
@@ -202,10 +236,12 @@ async function startPlayback() {
       ui.setActiveSubdivision(tickIndex);
       if (tickIndex === 0) {
         if (state.trainerEnabled) {
-          const barsInterval = TRAINER_BARS[state.trainerBarsIndex];
-          if (state.barCount % barsInterval === 0) {
-            const increment = TRAINER_BPM_STEPS[state.trainerBpmIndex];
-            setTempo(state.bpm + increment);
+          if (state.trainerMode === "bars") {
+            const barsInterval = TRAINER_BARS[state.trainerBarsIndex];
+            if (state.barCount % barsInterval === 0) {
+              const increment = TRAINER_BPM_STEPS[state.trainerBpmIndex];
+              setTempo(state.bpm + increment);
+            }
           }
         }
       }
@@ -230,6 +266,7 @@ async function togglePlayback() {
   if (state.isPlaying) {
     state.isPlaying = false;
     audio.stop();
+    stopTrainerInterval();
     state.activeIndex = -1;
     state.barCount = 0;
     render();
@@ -342,6 +379,14 @@ function setupControls() {
     TRAINER_BPM_STEPS.map((value) => ({ label: String(value) })),
   );
   ui.populateSelect(
+    trainerSecondsSelect,
+    TRAINER_SECONDS.map((value) => ({ label: String(value) })),
+  );
+  ui.populateSelect(
+    trainerSecondsBpmSelect,
+    TRAINER_BPM_STEPS.map((value) => ({ label: String(value) })),
+  );
+  ui.populateSelect(
     accentBarsSelect,
     ACCENT_BARS.map((value) => ({ label: String(value) })),
   );
@@ -351,6 +396,8 @@ function setupControls() {
   ui.setSelectValue(soundProfileSelect, state.soundProfileIndex);
   ui.setSelectValue(trainerBarsSelect, state.trainerBarsIndex);
   ui.setSelectValue(trainerBpmSelect, state.trainerBpmIndex);
+  ui.setSelectValue(trainerSecondsSelect, state.trainerSecondsIndex);
+  ui.setSelectValue(trainerSecondsBpmSelect, state.trainerSecondsBpmIndex);
   ui.setSelectValue(accentBarsSelect, state.accentBarsIndex);
 
   const unlockAudio = () => {
@@ -417,12 +464,14 @@ function setupControls() {
       state.trainerEnabled = false;
       trainerPanel.classList.remove("is-open");
       trainerDisclosure.setAttribute("aria-expanded", "false");
+      stopTrainerInterval();
       render();
       return;
     }
     state.trainerEnabled = true;
     trainerPanel.classList.add("is-open");
     trainerDisclosure.setAttribute("aria-expanded", "true");
+    startTrainerInterval();
     render();
   });
 
@@ -517,6 +566,8 @@ function setupControls() {
       return;
     }
     state.trainerBarsIndex = Number(target.value);
+    state.trainerMode = "bars";
+    stopTrainerInterval();
     render();
   });
 
@@ -526,6 +577,30 @@ function setupControls() {
       return;
     }
     state.trainerBpmIndex = Number(target.value);
+    state.trainerMode = "bars";
+    stopTrainerInterval();
+    render();
+  });
+
+  trainerSecondsSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.trainerSecondsIndex = Number(target.value);
+    state.trainerMode = "seconds";
+    startTrainerInterval();
+    render();
+  });
+
+  trainerSecondsBpmSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.trainerSecondsBpmIndex = Number(target.value);
+    state.trainerMode = "seconds";
+    startTrainerInterval();
     render();
   });
 
