@@ -120,7 +120,7 @@ const state: MetronomeState = {
   trainerBpmIndex: 1,
   trainerEnabled: false,
   barCount: 0,
-  accentBarsIndex: 0,
+  accentBarsIndex: ACCENT_BARS.indexOf(12),
   accentEnabled: false,
 };
 
@@ -169,7 +169,7 @@ function render() {
     ? `Trainer: +${trainerStep} BPM / ${trainerBars} bars`
     : "Trainer: off";
   const accentBars = ACCENT_BARS[state.accentBarsIndex];
-  accentDisclosure.textContent = state.accentEnabled ? `Every ${accentBars} bars` : "Accent";
+  accentDisclosure.textContent = state.accentEnabled ? `Accent every ${accentBars} bars` : "Accent";
   accentDisclosure.classList.toggle("is-enabled", state.accentEnabled);
   updateWheelDisplay();
   ui.renderSubdivisionGrid({

@@ -336,7 +336,7 @@ select {
 .grid-header {
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: start;
+  align-items: center;
   gap: 12px;
 }
 
