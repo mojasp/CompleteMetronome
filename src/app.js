@@ -54,9 +54,7 @@ const SOUND_PROFILES = [
 
 const BPM_MIN = 20;
 const BPM_MAX = 300;
-const WHEEL_MIN_ANGLE = 225;
-const WHEEL_MAX_ANGLE = 135;
-const WHEEL_ARC = 270;
+const BPM_PER_DEGREE = 0.25;
 
 const state = {
   bpm: 120,
@@ -180,26 +178,6 @@ function setSoundProfile(nextIndex) {
   render();
 }
 
-function clampDialAngle(angle) {
-  if (angle > WHEEL_MAX_ANGLE && angle < WHEEL_MIN_ANGLE) {
-    return angle < 180 ? WHEEL_MAX_ANGLE : WHEEL_MIN_ANGLE;
-  }
-  return angle;
-}
-
-function angleToProgress(angle) {
-  const clamped = clampDialAngle(angle);
-  if (clamped >= WHEEL_MIN_ANGLE) {
-    return (clamped - WHEEL_MIN_ANGLE) / WHEEL_ARC;
-  }
-  return (clamped + (360 - WHEEL_MIN_ANGLE)) / WHEEL_ARC;
-}
-
-function progressToAngle(progress) {
-  const angle = WHEEL_MIN_ANGLE + progress * WHEEL_ARC;
-  return angle >= 360 ? angle - 360 : angle;
-}
-
 function angleFromPointer(event, element) {
   const rect = element.getBoundingClientRect();
   const x = event.clientX - (rect.left + rect.width / 2);
@@ -208,10 +186,17 @@ function angleFromPointer(event, element) {
   return (angle + 450) % 360;
 }
 
+function normalizeAngleDelta(delta) {
+  if (delta > 180) {
+    return delta - 360;
+  }
+  if (delta < -180) {
+    return delta + 360;
+  }
+  return delta;
+}
+
 function updateWheelDisplay() {
-  const tempoProgress = (state.bpm - BPM_MIN) / (BPM_MAX - BPM_MIN);
-  const tempoAngle = progressToAngle(tempoProgress);
-  tempoWheel.style.setProperty("--angle", `${tempoAngle}deg`);
   tempoWheel.setAttribute("aria-valuenow", String(state.bpm));
 }
 
@@ -221,6 +206,7 @@ function attachWheelControls() {
   }
 
   let isActive = false;
+  let lastAngle = 0;
 
   const handlePointer = (event) => {
     if (!isActive) {
@@ -228,9 +214,12 @@ function attachWheelControls() {
     }
     event.preventDefault();
     const angle = angleFromPointer(event, tempoWheel);
-    const progress = angleToProgress(angle);
-    const nextBpm = Math.round(BPM_MIN + progress * (BPM_MAX - BPM_MIN));
-    setTempo(nextBpm);
+    const delta = normalizeAngleDelta(angle - lastAngle);
+    lastAngle = angle;
+    if (Math.abs(delta) < 0.1) {
+      return;
+    }
+    setTempo(state.bpm + Math.round(delta * BPM_PER_DEGREE));
   };
 
   const handlePointerUp = (event) => {
@@ -244,6 +233,7 @@ function attachWheelControls() {
   tempoWheel.addEventListener("pointerdown", (event) => {
     isActive = true;
     tempoWheel.setPointerCapture(event.pointerId);
+    lastAngle = angleFromPointer(event, tempoWheel);
     handlePointer(event);
   });
   tempoWheel.addEventListener("pointermove", handlePointer);
