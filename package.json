@@ -10,6 +10,6 @@
     "watch": "bun build src/app.ts --outdir=dist --target=browser --format=esm --watch"
   },
   "devDependencies": {
-    "typescript": "^5.5.4"
+    "typescript": "^5.9.3"
   }
 }

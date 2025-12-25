@@ -20,7 +20,8 @@ const tempoDisplay = getElement<HTMLDivElement>("tempo-display");
 const tempoWheel = getElement<HTMLDivElement>("tempo-wheel");
 const soundProfileSelect = getElement<HTMLSelectElement>("sound-profile");
 const togglePlay = getElement<HTMLButtonElement>("toggle-play");
-const timeSignatureSelect = getElement<HTMLSelectElement>("time-signature");
+const timeSignatureNumeratorSelect = getElement<HTMLSelectElement>("time-signature-numerator");
+const timeSignatureDenominatorSelect = getElement<HTMLSelectElement>("time-signature-denominator");
 const subdivisionSelect = getElement<HTMLSelectElement>("subdivision");
 const subdivisionGrid = getElement<HTMLDivElement>("subdivision-grid");
 
@@ -36,14 +37,13 @@ type Subdivision = {
 
 type SoundProfileOption = SoundProfile & { label: string };
 
-const TIME_SIGNATURES: TimeSignature[] = [
-  { label: "4/4", beatsPerBar: 4 },
-  { label: "2/4", beatsPerBar: 2 },
-  { label: "3/4", beatsPerBar: 3 },
-  { label: "5/4", beatsPerBar: 5 },
-  { label: "6/8", beatsPerBar: 6 },
-  { label: "7/8", beatsPerBar: 7 },
-];
+const MAX_NUMERATOR = 12;
+const NUMERATORS = Array.from({ length: MAX_NUMERATOR - 1 }, (_, index) => index + 2);
+const DENOMINATORS = [1, 2, 4, 8, 16];
+const TIME_SIGNATURES: TimeSignature[] = NUMERATORS.map((beats) => ({
+  label: String(beats),
+  beatsPerBar: beats,
+}));
 
 const SUBDIVISIONS: Subdivision[] = [
   { label: "Quarter", perBeat: 1 },
@@ -82,7 +82,8 @@ const BPM_PER_DEGREE = 0.25;
 type MetronomeState = {
   bpm: number;
   isPlaying: boolean;
-  timeSignatureIndex: number;
+  timeSignatureNumeratorIndex: number;
+  timeSignatureDenominatorIndex: number;
   subdivisionIndex: number;
   soundProfileIndex: number;
   activeIndex: number;
@@ -92,7 +93,8 @@ type MetronomeState = {
 const state: MetronomeState = {
   bpm: 120,
   isPlaying: false,
-  timeSignatureIndex: 0,
+  timeSignatureNumeratorIndex: NUMERATORS.indexOf(4),
+  timeSignatureDenominatorIndex: DENOMINATORS.indexOf(4),
   subdivisionIndex: 0,
   soundProfileIndex: 1,
   activeIndex: 0,
@@ -106,7 +108,6 @@ const ui = createUI({
   tempoUp,
   tempoDown,
   togglePlay,
-  timeSignatureSelect,
   subdivisionSelect,
   subdivisionGrid,
 });
@@ -115,7 +116,7 @@ const audio = createMetronomeAudio();
 
 function totalSubdivisions() {
   return (
-    TIME_SIGNATURES[state.timeSignatureIndex].beatsPerBar *
+    TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar *
     SUBDIVISIONS[state.subdivisionIndex].perBeat
   );
 }
@@ -147,7 +148,7 @@ function render() {
 }
 
 function updateAudioSettings() {
-  const timeSignature = TIME_SIGNATURES[state.timeSignatureIndex];
+  const timeSignature = TIME_SIGNATURES[state.timeSignatureNumeratorIndex];
   const subdivision = SUBDIVISIONS[state.subdivisionIndex];
 
   audio.update({
@@ -159,7 +160,7 @@ function updateAudioSettings() {
 }
 
 async function startPlayback() {
-  const timeSignature = TIME_SIGNATURES[state.timeSignatureIndex];
+  const timeSignature = TIME_SIGNATURES[state.timeSignatureNumeratorIndex];
   const subdivision = SUBDIVISIONS[state.subdivisionIndex];
 
   await audio.start({
@@ -274,10 +275,15 @@ function attachWheelControls() {
 }
 
 function setupControls() {
-  ui.populateSelect(timeSignatureSelect, TIME_SIGNATURES);
+  ui.populateSelect(timeSignatureNumeratorSelect, TIME_SIGNATURES);
+  ui.populateSelect(
+    timeSignatureDenominatorSelect,
+    DENOMINATORS.map((value) => ({ label: String(value) })),
+  );
   ui.populateSelect(subdivisionSelect, SUBDIVISIONS);
   ui.populateSelect(soundProfileSelect, SOUND_PROFILES);
-  ui.setSelectValue(timeSignatureSelect, state.timeSignatureIndex);
+  ui.setSelectValue(timeSignatureNumeratorSelect, state.timeSignatureNumeratorIndex);
+  ui.setSelectValue(timeSignatureDenominatorSelect, state.timeSignatureDenominatorIndex);
   ui.setSelectValue(subdivisionSelect, state.subdivisionIndex);
   ui.setSelectValue(soundProfileSelect, state.soundProfileIndex);
 
@@ -343,12 +349,23 @@ function setupControls() {
     void togglePlayback();
   });
 
-  timeSignatureSelect.addEventListener("change", (event: Event) => {
+  timeSignatureNumeratorSelect.addEventListener("change", (event: Event) => {
     const target = event.target as HTMLSelectElement | null;
     if (!target) {
       return;
     }
-    state.timeSignatureIndex = Number(target.value);
+    state.timeSignatureNumeratorIndex = Number(target.value);
+    initSoundStates();
+    updateAudioSettings();
+    render();
+  });
+
+  timeSignatureDenominatorSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.timeSignatureDenominatorIndex = Number(target.value);
     initSoundStates();
     updateAudioSettings();
     render();

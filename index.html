@@ -61,7 +61,11 @@
         <div class="selectors">
           <label class="select-field">
             <span class="label">Time signature</span>
-            <select id="time-signature"></select>
+            <div class="time-signature-controls">
+              <select id="time-signature-numerator" aria-label="Time signature numerator"></select>
+              <span class="time-signature-separator" aria-hidden="true">/</span>
+              <select id="time-signature-denominator" aria-label="Time signature denominator"></select>
+            </div>
           </label>
 
           <label class="select-field">

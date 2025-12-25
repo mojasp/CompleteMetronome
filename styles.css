@@ -261,6 +261,18 @@ h1 {
   font-size: 0.9rem;
 }
 
+.time-signature-controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-signature-separator {
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+
 select {
   border-radius: 12px;
   border: 1px solid rgba(31, 28, 26, 0.15);

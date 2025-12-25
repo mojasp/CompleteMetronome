@@ -9,7 +9,6 @@ type UIElements = {
   tempoUp: HTMLButtonElement;
   tempoDown: HTMLButtonElement;
   togglePlay: HTMLButtonElement;
-  timeSignatureSelect: HTMLSelectElement;
   subdivisionSelect: HTMLSelectElement;
   subdivisionGrid: HTMLDivElement;
 };
@@ -30,7 +29,6 @@ export function createUI({
   tempoUp,
   tempoDown,
   togglePlay,
-  timeSignatureSelect,
   subdivisionSelect,
   subdivisionGrid,
 }: UIElements) {
