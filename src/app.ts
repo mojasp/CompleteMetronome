@@ -11,10 +11,12 @@ function getElement<T extends HTMLElement>(id: string): T {
 }
 
 const tempoValue = getElement<HTMLElement>("tempo-value");
+const tempoInput = getElement<HTMLInputElement>("tempo-input");
 const tempoWheelValue = getElement<HTMLElement>("tempo-wheel-value");
 const tempoUp = getElement<HTMLButtonElement>("tempo-up");
 const tempoDown = getElement<HTMLButtonElement>("tempo-down");
 const tempoBlock = getElement<HTMLDivElement>("tempo-block");
+const tempoDisplay = getElement<HTMLDivElement>("tempo-display");
 const tempoWheel = getElement<HTMLDivElement>("tempo-wheel");
 const soundProfileSelect = getElement<HTMLSelectElement>("sound-profile");
 const togglePlay = getElement<HTMLButtonElement>("toggle-play");
@@ -93,13 +95,14 @@ const state: MetronomeState = {
   isPlaying: false,
   timeSignatureIndex: 0,
   subdivisionIndex: 0,
-  soundProfileIndex: 0,
+  soundProfileIndex: 1,
   activeIndex: 0,
   soundStates: [],
 };
 
 const ui = createUI({
   tempoValue,
+  tempoInput,
   tempoWheelValue,
   tempoUp,
   tempoDown,
@@ -293,6 +296,44 @@ function setupControls() {
 
   tempoUp.addEventListener("click", () => adjustTempo(1));
   tempoDown.addEventListener("click", () => adjustTempo(-1));
+
+  const tempoInputMedia = window.matchMedia("(max-width: 720px)");
+
+  const beginTempoEdit = () => {
+    if (tempoInputMedia.matches) {
+      return;
+    }
+    tempoDisplay.classList.add("is-editing");
+    tempoInput.value = String(state.bpm);
+    tempoInput.focus();
+    tempoInput.select();
+  };
+
+  const endTempoEdit = (commit: boolean) => {
+    if (!tempoDisplay.classList.contains("is-editing")) {
+      return;
+    }
+    if (commit) {
+      const nextValue = Number(tempoInput.value);
+      if (Number.isFinite(nextValue)) {
+        setTempo(Math.round(nextValue));
+      }
+    }
+    tempoDisplay.classList.remove("is-editing");
+    tempoInput.value = String(state.bpm);
+  };
+
+  tempoValue.addEventListener("click", beginTempoEdit);
+  tempoInput.addEventListener("keydown", (event: KeyboardEvent) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      endTempoEdit(true);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      endTempoEdit(false);
+    }
+  });
+  tempoInput.addEventListener("blur", () => endTempoEdit(true));
 
   tempoBlock.addEventListener("wheel", (event: WheelEvent) => {
     event.preventDefault();

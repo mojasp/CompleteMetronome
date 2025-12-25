@@ -3,8 +3,8 @@ import type { SoundProfile, SoundState } from "./types.js";
 const DEFAULT_LOOKAHEAD_MS = 25;
 const DEFAULT_SCHEDULE_AHEAD = 0.1;
 const DEFAULT_SOUND_PROFILE: SoundProfile = {
-  accent: { type: "square", frequency: 1400, volume: 0.22, decay: 0.04, duration: 0.05 },
-  regular: { type: "square", frequency: 900, volume: 0.16, decay: 0.04, duration: 0.05 },
+  accent: { type: "triangle", frequency: 1200, volume: 0.18, decay: 0.05, duration: 0.06 },
+  regular: { type: "triangle", frequency: 760, volume: 0.13, decay: 0.05, duration: 0.06 },
 };
 
 function createClick(

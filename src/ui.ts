@@ -4,6 +4,7 @@ const SOUND_STATES: SoundState[] = ["A", "B", "mute"];
 
 type UIElements = {
   tempoValue: HTMLElement;
+  tempoInput: HTMLInputElement | null;
   tempoWheelValue: HTMLElement | null;
   tempoUp: HTMLButtonElement;
   tempoDown: HTMLButtonElement;
@@ -24,6 +25,7 @@ type SubdivisionGridState = {
 
 export function createUI({
   tempoValue,
+  tempoInput,
   tempoWheelValue,
   tempoUp,
   tempoDown,
@@ -39,6 +41,9 @@ export function createUI({
 
   function setTempoDisplay(bpm: number) {
     tempoValue.textContent = String(bpm);
+    if (tempoInput && document.activeElement !== tempoInput) {
+      tempoInput.value = String(bpm);
+    }
     if (tempoWheelValue) {
       tempoWheelValue.textContent = String(bpm);
     }
@@ -70,8 +75,9 @@ export function createUI({
       cell.type = "button";
       cell.className = "subdivision-cell";
       cell.dataset.index = String(i);
-      const label = soundStates[i] === "mute" ? "-" : soundStates[i];
-      cell.textContent = label;
+      cell.textContent = "";
+      const ariaLabel = soundStates[i] === "A" ? "Accent" : soundStates[i] === "B" ? "Regular" : "Mute";
+      cell.setAttribute("aria-label", ariaLabel);
       cell.classList.add(soundStates[i] === "A" ? "sound-a" : "sound-b");
       if (soundStates[i] === "mute") {
         cell.classList.add("sound-mute");

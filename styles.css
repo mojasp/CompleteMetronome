@@ -141,6 +141,27 @@ h1 {
   font-weight: 600;
   min-width: 88px;
   text-align: center;
+  cursor: pointer;
+}
+
+.tempo-input {
+  display: none;
+  font-size: 2.6rem;
+  font-weight: 600;
+  width: 96px;
+  text-align: center;
+  border: 2px solid rgba(31, 28, 26, 0.2);
+  border-radius: 14px;
+  padding: 4px 6px;
+  font-family: var(--font-display);
+}
+
+.tempo-display.is-editing .tempo-value {
+  display: none;
+}
+
+.tempo-display.is-editing .tempo-input {
+  display: block;
 }
 
 .tempo-wheel {
@@ -201,6 +222,10 @@ h1 {
   font-size: 0.8rem;
   color: var(--ink-soft);
   margin: 0;
+}
+
+.tempo-hint--mobile {
+  display: none;
 }
 
 .transport {
@@ -290,8 +315,9 @@ select {
 }
 
 .subdivision-cell.sound-mute {
-  background: rgba(31, 28, 26, 0.05);
-  color: rgba(31, 28, 26, 0.4);
+  background: rgba(31, 28, 26, 0.08);
+  border-color: rgba(31, 28, 26, 0.25);
+  color: rgba(31, 28, 26, 0.35);
 }
 
 .subdivision-cell.is-active {
@@ -328,6 +354,14 @@ select {
     display: grid;
     width: 220px;
     height: 220px;
+  }
+
+  .tempo-hint--desktop {
+    display: none;
+  }
+
+  .tempo-hint--mobile {
+    display: block;
   }
 
   .grid-header {
