@@ -1,11 +1,18 @@
+import type { SoundProfile, SoundState } from "./types.js";
+
 const DEFAULT_LOOKAHEAD_MS = 25;
 const DEFAULT_SCHEDULE_AHEAD = 0.1;
-const DEFAULT_SOUND_PROFILE = {
+const DEFAULT_SOUND_PROFILE: SoundProfile = {
   accent: { type: "square", frequency: 1400, volume: 0.22, decay: 0.04, duration: 0.05 },
   regular: { type: "square", frequency: 900, volume: 0.16, decay: 0.04, duration: 0.05 },
 };
 
-function createClick(audioCtx, time, variant, soundProfile) {
+function createClick(
+  audioCtx: AudioContext,
+  time: number,
+  variant: SoundState,
+  soundProfile?: SoundProfile,
+) {
   if (variant === "mute") {
     return;
   }
@@ -18,8 +25,8 @@ function createClick(audioCtx, time, variant, soundProfile) {
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
 
-  osc.type = tone.type || "square";
-  osc.frequency.value = tone.frequency || 900;
+  osc.type = tone.type ?? "square";
+  osc.frequency.value = tone.frequency ?? 900;
 
   gain.gain.setValueAtTime(tone.volume ?? 0.16, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + decay);
@@ -29,18 +36,49 @@ function createClick(audioCtx, time, variant, soundProfile) {
   osc.stop(time + duration);
 }
 
-export function createMetronomeAudio() {
-  let audioCtx = null;
-  let timerId = null;
+type StartOptions = {
+  bpm: number;
+  beatsPerBar: number;
+  subdivisionsPerBeat: number;
+  soundProfile: SoundProfile;
+  onTick: (tickIndex: number) => void;
+  getSoundState: (tickIndex: number) => SoundState;
+};
+
+type UpdateOptions = Partial<{
+  bpm: number;
+  beatsPerBar: number;
+  subdivisionsPerBeat: number;
+  soundProfile: SoundProfile;
+}>;
+
+type CallbackOptions = Partial<{
+  onTick: (tickIndex: number) => void;
+  getSoundState: (tickIndex: number) => SoundState;
+}>;
+
+type MetronomeAudio = {
+  start: (options: StartOptions) => Promise<void>;
+  stop: () => void;
+  resume: () => Promise<void>;
+  update: (options: UpdateOptions) => void;
+  setCallbacks: (options: CallbackOptions) => void;
+};
+
+export function createMetronomeAudio(): MetronomeAudio {
+  let audioCtx: AudioContext | null = null;
+  let timerId: ReturnType<typeof setInterval> | null = null;
   let nextNoteTime = 0;
   let currentTick = 0;
   let bpm = 120;
   let beatsPerBar = 4;
   let subdivisionsPerBeat = 1;
   let soundProfile = DEFAULT_SOUND_PROFILE;
-  let onTick = () => {};
-  let getSoundState = () => "mute";
-  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  let onTick: (tickIndex: number) => void = () => {};
+  let getSoundState: (tickIndex: number) => SoundState = () => "mute";
+  const AudioContextCtor =
+    window.AudioContext ||
+    (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
 
   function ensureAudioContext() {
     if (audioCtx) {
@@ -58,17 +96,18 @@ export function createMetronomeAudio() {
   }
 
   function scheduleTick() {
-    if (!audioCtx) {
+    const ctx = audioCtx;
+    if (!ctx) {
       return;
     }
 
-    while (nextNoteTime < audioCtx.currentTime + DEFAULT_SCHEDULE_AHEAD) {
+    while (nextNoteTime < ctx.currentTime + DEFAULT_SCHEDULE_AHEAD) {
       const soundState = getSoundState(currentTick);
-      createClick(audioCtx, nextNoteTime, soundState, soundProfile);
+      createClick(ctx, nextNoteTime, soundState, soundProfile);
       const tickToSend = currentTick;
       const tickTime = nextNoteTime;
 
-      const delayMs = Math.max(0, (tickTime - audioCtx.currentTime) * 1000);
+      const delayMs = Math.max(0, (tickTime - ctx.currentTime) * 1000);
       setTimeout(() => onTick(tickToSend), delayMs);
 
       nextNoteTime += secondsPerSubdivision();
@@ -84,7 +123,7 @@ export function createMetronomeAudio() {
       soundProfile: nextSoundProfile,
       onTick: nextOnTick,
       getSoundState: nextSoundState,
-    }) {
+    }: StartOptions) {
       const ctx = ensureAudioContext();
       if (ctx.state === "suspended" || ctx.state === "interrupted") {
         await ctx.resume();
@@ -97,7 +136,7 @@ export function createMetronomeAudio() {
       getSoundState = nextSoundState;
 
       currentTick = 0;
-      nextNoteTime = audioCtx.currentTime + 0.05;
+      nextNoteTime = ctx.currentTime + 0.05;
 
       timerId = setInterval(scheduleTick, DEFAULT_LOOKAHEAD_MS);
     },
@@ -118,13 +157,13 @@ export function createMetronomeAudio() {
       beatsPerBar: nextBeats,
       subdivisionsPerBeat: nextSubdivs,
       soundProfile: nextSoundProfile,
-    }) {
+    }: UpdateOptions) {
       bpm = nextBpm ?? bpm;
       beatsPerBar = nextBeats ?? beatsPerBar;
       subdivisionsPerBeat = nextSubdivs ?? subdivisionsPerBeat;
       soundProfile = nextSoundProfile ?? soundProfile;
     },
-    setCallbacks({ onTick: nextOnTick, getSoundState: nextSoundState }) {
+    setCallbacks({ onTick: nextOnTick, getSoundState: nextSoundState }: CallbackOptions) {
       onTick = nextOnTick ?? onTick;
       getSoundState = nextSoundState ?? getSoundState;
     },

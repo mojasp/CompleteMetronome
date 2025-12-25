@@ -1,4 +1,26 @@
-const SOUND_STATES = ["A", "B", "mute"];
+import type { SoundState } from "./types.js";
+
+const SOUND_STATES: SoundState[] = ["A", "B", "mute"];
+
+type UIElements = {
+  tempoValue: HTMLElement;
+  tempoWheelValue: HTMLElement | null;
+  tempoUp: HTMLButtonElement;
+  tempoDown: HTMLButtonElement;
+  togglePlay: HTMLButtonElement;
+  timeSignatureSelect: HTMLSelectElement;
+  subdivisionSelect: HTMLSelectElement;
+  subdivisionGrid: HTMLDivElement;
+};
+
+type SelectOption = { label: string };
+
+type SubdivisionGridState = {
+  totalSubdivisions: number;
+  subdivisionsPerBeat: number;
+  soundStates: SoundState[];
+  activeIndex: number;
+};
 
 export function createUI({
   tempoValue,
@@ -9,20 +31,20 @@ export function createUI({
   timeSignatureSelect,
   subdivisionSelect,
   subdivisionGrid,
-}) {
-  function setPlayState(isPlaying) {
+}: UIElements) {
+  function setPlayState(isPlaying: boolean) {
     togglePlay.textContent = isPlaying ? "Stop" : "Start";
     togglePlay.classList.toggle("is-playing", isPlaying);
   }
 
-  function setTempoDisplay(bpm) {
+  function setTempoDisplay(bpm: number) {
     tempoValue.textContent = String(bpm);
     if (tempoWheelValue) {
       tempoWheelValue.textContent = String(bpm);
     }
   }
 
-  function populateSelect(select, options) {
+  function populateSelect(select: HTMLSelectElement, options: SelectOption[]) {
     select.innerHTML = "";
     options.forEach((option, index) => {
       const el = document.createElement("option");
@@ -32,7 +54,7 @@ export function createUI({
     });
   }
 
-  function setSelectValue(select, index) {
+  function setSelectValue(select: HTMLSelectElement, index: number) {
     select.value = String(index);
   }
 
@@ -41,7 +63,7 @@ export function createUI({
     subdivisionsPerBeat,
     soundStates,
     activeIndex,
-  }) {
+  }: SubdivisionGridState) {
     subdivisionGrid.innerHTML = "";
     for (let i = 0; i < totalSubdivisions; i += 1) {
       const cell = document.createElement("button");
@@ -64,7 +86,7 @@ export function createUI({
     }
   }
 
-  function nextSoundState(current) {
+  function nextSoundState(current: SoundState) {
     const idx = SOUND_STATES.indexOf(current);
     return SOUND_STATES[(idx + 1) % SOUND_STATES.length];
   }

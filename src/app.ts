@@ -1,19 +1,41 @@
 import { createMetronomeAudio } from "./audio.js";
 import { createUI } from "./ui.js";
+import type { SoundProfile, SoundState } from "./types.js";
 
-const tempoValue = document.getElementById("tempo-value");
-const tempoWheelValue = document.getElementById("tempo-wheel-value");
-const tempoUp = document.getElementById("tempo-up");
-const tempoDown = document.getElementById("tempo-down");
-const tempoBlock = document.getElementById("tempo-block");
-const tempoWheel = document.getElementById("tempo-wheel");
-const soundProfileSelect = document.getElementById("sound-profile");
-const togglePlay = document.getElementById("toggle-play");
-const timeSignatureSelect = document.getElementById("time-signature");
-const subdivisionSelect = document.getElementById("subdivision");
-const subdivisionGrid = document.getElementById("subdivision-grid");
+function getElement<T extends HTMLElement>(id: string): T {
+  const element = document.getElementById(id);
+  if (!element) {
+    throw new Error(`Missing required element: ${id}`);
+  }
+  return element as T;
+}
 
-const TIME_SIGNATURES = [
+const tempoValue = getElement<HTMLElement>("tempo-value");
+const tempoWheelValue = getElement<HTMLElement>("tempo-wheel-value");
+const tempoUp = getElement<HTMLButtonElement>("tempo-up");
+const tempoDown = getElement<HTMLButtonElement>("tempo-down");
+const tempoBlock = getElement<HTMLDivElement>("tempo-block");
+const tempoWheel = getElement<HTMLDivElement>("tempo-wheel");
+const soundProfileSelect = getElement<HTMLSelectElement>("sound-profile");
+const togglePlay = getElement<HTMLButtonElement>("toggle-play");
+const timeSignatureSelect = getElement<HTMLSelectElement>("time-signature");
+const subdivisionSelect = getElement<HTMLSelectElement>("subdivision");
+const subdivisionGrid = getElement<HTMLDivElement>("subdivision-grid");
+
+type TimeSignature = {
+  label: string;
+  beatsPerBar: number;
+  noteValue: number;
+};
+
+type Subdivision = {
+  label: string;
+  perBeat: number;
+};
+
+type SoundProfileOption = SoundProfile & { label: string };
+
+const TIME_SIGNATURES: TimeSignature[] = [
   { label: "4/4", beatsPerBar: 4, noteValue: 4 },
   { label: "2/4", beatsPerBar: 2, noteValue: 4 },
   { label: "3/4", beatsPerBar: 3, noteValue: 4 },
@@ -22,14 +44,14 @@ const TIME_SIGNATURES = [
   { label: "7/8", beatsPerBar: 7, noteValue: 8 },
 ];
 
-const SUBDIVISIONS = [
+const SUBDIVISIONS: Subdivision[] = [
   { label: "Quarter", perBeat: 1 },
   { label: "Eighth", perBeat: 2 },
   { label: "Triplet", perBeat: 3 },
   { label: "Sixteenth", perBeat: 4 },
 ];
 
-const SOUND_PROFILES = [
+const SOUND_PROFILES: SoundProfileOption[] = [
   {
     label: "Bright",
     accent: { type: "square", frequency: 1400, volume: 0.22, decay: 0.04, duration: 0.05 },
@@ -56,7 +78,17 @@ const BPM_MIN = 20;
 const BPM_MAX = 300;
 const BPM_PER_DEGREE = 0.25;
 
-const state = {
+type MetronomeState = {
+  bpm: number;
+  isPlaying: boolean;
+  timeSignatureIndex: number;
+  subdivisionIndex: number;
+  soundProfileIndex: number;
+  activeIndex: number;
+  soundStates: SoundState[];
+};
+
+const state: MetronomeState = {
   bpm: 120,
   isPlaying: false,
   timeSignatureIndex: 0,
@@ -89,7 +121,7 @@ function totalSubdivisions() {
 function initSoundStates() {
   const total = totalSubdivisions();
   const perBeat = SUBDIVISIONS[state.subdivisionIndex].perBeat;
-  const nextStates = [];
+  const nextStates: SoundState[] = [];
   for (let i = 0; i < total; i += 1) {
     if (i === 0) {
       nextStates.push("A");
@@ -135,11 +167,11 @@ async function startPlayback() {
     beatsPerBar: timeSignature.beatsPerBar,
     subdivisionsPerBeat: subdivision.perBeat,
     soundProfile: SOUND_PROFILES[state.soundProfileIndex],
-    onTick: (tickIndex) => {
+    onTick: (tickIndex: number) => {
       state.activeIndex = tickIndex;
       render();
     },
-    getSoundState: (tickIndex) => state.soundStates[tickIndex] || "mute",
+    getSoundState: (tickIndex: number) => state.soundStates[tickIndex] || "mute",
   });
 }
 
@@ -162,23 +194,23 @@ async function togglePlayback() {
   render();
 }
 
-function adjustTempo(delta) {
+function adjustTempo(delta: number) {
   setTempo(state.bpm + delta);
 }
 
-function setTempo(nextBpm) {
+function setTempo(nextBpm: number) {
   state.bpm = Math.min(BPM_MAX, Math.max(BPM_MIN, nextBpm));
   updateAudioSettings();
   render();
 }
 
-function setSoundProfile(nextIndex) {
+function setSoundProfile(nextIndex: number) {
   state.soundProfileIndex = Math.max(0, Math.min(SOUND_PROFILES.length - 1, nextIndex));
   updateAudioSettings();
   render();
 }
 
-function angleFromPointer(event, element) {
+function angleFromPointer(event: PointerEvent, element: HTMLElement) {
   const rect = element.getBoundingClientRect();
   const x = event.clientX - (rect.left + rect.width / 2);
   const y = event.clientY - (rect.top + rect.height / 2);
@@ -186,7 +218,7 @@ function angleFromPointer(event, element) {
   return (angle + 450) % 360;
 }
 
-function normalizeAngleDelta(delta) {
+function normalizeAngleDelta(delta: number) {
   if (delta > 180) {
     return delta - 360;
   }
@@ -208,7 +240,7 @@ function attachWheelControls() {
   let isActive = false;
   let lastAngle = 0;
 
-  const handlePointer = (event) => {
+  const handlePointer = (event: PointerEvent) => {
     if (!isActive) {
       return;
     }
@@ -222,7 +254,7 @@ function attachWheelControls() {
     setTempo(state.bpm + Math.round(delta * BPM_PER_DEGREE));
   };
 
-  const handlePointerUp = (event) => {
+  const handlePointerUp = (event: PointerEvent) => {
     if (!isActive) {
       return;
     }
@@ -230,7 +262,7 @@ function attachWheelControls() {
     isActive = false;
   };
 
-  tempoWheel.addEventListener("pointerdown", (event) => {
+  tempoWheel.addEventListener("pointerdown", (event: PointerEvent) => {
     isActive = true;
     tempoWheel.setPointerCapture(event.pointerId);
     lastAngle = angleFromPointer(event, tempoWheel);
@@ -262,7 +294,7 @@ function setupControls() {
   tempoUp.addEventListener("click", () => adjustTempo(1));
   tempoDown.addEventListener("click", () => adjustTempo(-1));
 
-  tempoBlock.addEventListener("wheel", (event) => {
+  tempoBlock.addEventListener("wheel", (event: WheelEvent) => {
     event.preventDefault();
     adjustTempo(event.deltaY > 0 ? -1 : 1);
   });
@@ -273,25 +305,37 @@ function setupControls() {
     void togglePlayback();
   });
 
-  timeSignatureSelect.addEventListener("change", (event) => {
-    state.timeSignatureIndex = Number(event.target.value);
+  timeSignatureSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.timeSignatureIndex = Number(target.value);
     initSoundStates();
     updateAudioSettings();
     render();
   });
 
-  subdivisionSelect.addEventListener("change", (event) => {
-    state.subdivisionIndex = Number(event.target.value);
+  subdivisionSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.subdivisionIndex = Number(target.value);
     initSoundStates();
     updateAudioSettings();
     render();
   });
 
-  soundProfileSelect.addEventListener("change", (event) => {
-    setSoundProfile(Number(event.target.value));
+  soundProfileSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    setSoundProfile(Number(target.value));
   });
 
-  subdivisionGrid.addEventListener("click", (event) => {
+  subdivisionGrid.addEventListener("click", (event: MouseEvent) => {
     const target = event.target;
     if (!(target instanceof HTMLButtonElement)) {
       return;
@@ -301,8 +345,9 @@ function setupControls() {
     render();
   });
 
-  document.addEventListener("keydown", (event) => {
-    const tag = event.target?.tagName;
+  document.addEventListener("keydown", (event: KeyboardEvent) => {
+    const target = event.target as HTMLElement | null;
+    const tag = target?.tagName;
     if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") {
       return;
     }
