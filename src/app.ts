@@ -27,7 +27,6 @@ const subdivisionGrid = getElement<HTMLDivElement>("subdivision-grid");
 type TimeSignature = {
   label: string;
   beatsPerBar: number;
-  noteValue: number;
 };
 
 type Subdivision = {
@@ -38,12 +37,12 @@ type Subdivision = {
 type SoundProfileOption = SoundProfile & { label: string };
 
 const TIME_SIGNATURES: TimeSignature[] = [
-  { label: "4/4", beatsPerBar: 4, noteValue: 4 },
-  { label: "2/4", beatsPerBar: 2, noteValue: 4 },
-  { label: "3/4", beatsPerBar: 3, noteValue: 4 },
-  { label: "5/4", beatsPerBar: 5, noteValue: 4 },
-  { label: "6/8", beatsPerBar: 6, noteValue: 8 },
-  { label: "7/8", beatsPerBar: 7, noteValue: 8 },
+  { label: "4/4", beatsPerBar: 4 },
+  { label: "2/4", beatsPerBar: 2 },
+  { label: "3/4", beatsPerBar: 3 },
+  { label: "5/4", beatsPerBar: 5 },
+  { label: "6/8", beatsPerBar: 6 },
+  { label: "7/8", beatsPerBar: 7 },
 ];
 
 const SUBDIVISIONS: Subdivision[] = [
@@ -128,8 +127,6 @@ function initSoundStates() {
   for (let i = 0; i < total; i += 1) {
     if (i === 0) {
       nextStates.push("A");
-    } else if (i % perBeat === 0) {
-      nextStates.push("B");
     } else {
       nextStates.push("B");
     }
