@@ -34,6 +34,9 @@ export function createUI({
   subdivisionSelect,
   subdivisionGrid,
 }: UIElements) {
+  let subdivisionCells: HTMLButtonElement[] = [];
+  let lastActiveIndex = -1;
+
   function setPlayState(isPlaying: boolean) {
     togglePlay.textContent = isPlaying ? "Stop" : "Start";
     togglePlay.classList.toggle("is-playing", isPlaying);
@@ -69,32 +72,52 @@ export function createUI({
     soundStates,
     activeIndex,
   }: SubdivisionGridState) {
-    subdivisionGrid.innerHTML = "";
-    for (let i = 0; i < totalSubdivisions; i += 1) {
-      const cell = document.createElement("button");
-      cell.type = "button";
-      cell.className = "subdivision-cell";
-      cell.dataset.index = String(i);
-      cell.textContent = "";
-      const ariaLabel = soundStates[i] === "A" ? "Accent" : soundStates[i] === "B" ? "Regular" : "Mute";
-      cell.setAttribute("aria-label", ariaLabel);
-      cell.classList.add(soundStates[i] === "A" ? "sound-a" : "sound-b");
-      if (soundStates[i] === "mute") {
-        cell.classList.add("sound-mute");
+    if (subdivisionCells.length !== totalSubdivisions) {
+      subdivisionGrid.innerHTML = "";
+      subdivisionCells = [];
+      for (let i = 0; i < totalSubdivisions; i += 1) {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "subdivision-cell";
+        cell.dataset.index = String(i);
+        cell.textContent = "";
+        subdivisionGrid.appendChild(cell);
+        subdivisionCells.push(cell);
       }
-      if (i === activeIndex) {
-        cell.classList.add("is-active");
-      }
-      if (i % subdivisionsPerBeat === 0) {
-        cell.classList.add("is-beat-boundary");
-      }
-      subdivisionGrid.appendChild(cell);
     }
+
+    subdivisionCells.forEach((cell, i) => {
+      const soundState = soundStates[i] ?? "mute";
+      const ariaLabel = soundState === "A" ? "Accent" : soundState === "B" ? "Regular" : "Mute";
+      cell.setAttribute("aria-label", ariaLabel);
+      cell.classList.toggle("sound-a", soundState === "A");
+      cell.classList.toggle("sound-b", soundState === "B");
+      cell.classList.toggle("sound-mute", soundState === "mute");
+      cell.classList.toggle("is-beat-boundary", i % subdivisionsPerBeat === 0);
+      cell.classList.toggle("is-active", i === activeIndex);
+    });
+
+    lastActiveIndex = activeIndex;
   }
 
   function nextSoundState(current: SoundState) {
     const idx = SOUND_STATES.indexOf(current);
     return SOUND_STATES[(idx + 1) % SOUND_STATES.length];
+  }
+
+  function setActiveSubdivision(activeIndex: number) {
+    if (!subdivisionCells.length || activeIndex === lastActiveIndex) {
+      return;
+    }
+    const prev = subdivisionCells[lastActiveIndex];
+    if (prev) {
+      prev.classList.remove("is-active");
+    }
+    const next = subdivisionCells[activeIndex];
+    if (next) {
+      next.classList.add("is-active");
+    }
+    lastActiveIndex = activeIndex;
   }
 
   return {
@@ -104,5 +127,6 @@ export function createUI({
     setSelectValue,
     renderSubdivisionGrid,
     nextSoundState,
+    setActiveSubdivision,
   };
 }

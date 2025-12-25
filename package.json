@@ -4,13 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc && npm run minify",
-    "minify": "esbuild dist/app.js dist/audio.js dist/types.js dist/ui.js --minify --outdir=dist --allow-overwrite",
-    "typecheck": "tsc --noEmit",
-    "watch": "tsc --watch"
+    "build": "bun build src/app.ts --outdir=dist --target=browser --format=esm --minify",
+    "test": "bun test --dom",
+    "typecheck": "bun x tsc --noEmit",
+    "watch": "bun build src/app.ts --outdir=dist --target=browser --format=esm --watch"
   },
   "devDependencies": {
-    "esbuild": "^0.24.0",
     "typescript": "^5.5.4"
   }
 }

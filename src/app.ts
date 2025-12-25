@@ -172,7 +172,7 @@ async function startPlayback() {
     soundProfile: SOUND_PROFILES[state.soundProfileIndex],
     onTick: (tickIndex: number) => {
       state.activeIndex = tickIndex;
-      render();
+      ui.setActiveSubdivision(tickIndex);
     },
     getSoundState: (tickIndex: number) => state.soundStates[tickIndex] || "mute",
   });

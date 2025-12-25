@@ -7,19 +7,26 @@ Browser-based metronome with adjustable tempo, time signatures, and subdivisions
 Install dependencies:
 
 ```sh
-npm install
+bun install
 ```
 
 Build TypeScript:
 
 ```sh
-npm run build
+bun run build
+```
+
+Run tests:
+
+```sh
+bun test
 ```
 
 Open `index.html` in a browser after building to load `dist/app.js`.
 
 ## Scripts
 
-- `npm run build` - Compile TypeScript to `dist/`.
-- `npm run typecheck` - Run TypeScript type checks without emitting files.
-- `npm run watch` - Rebuild on changes.
+- `bun run build` - Compile and minify to `dist/app.js`.
+- `bun test` - Run the test suite.
+- `bun run typecheck` - Run TypeScript type checks without emitting files.
+- `bun run watch` - Rebuild on changes.
