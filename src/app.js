@@ -11,9 +11,9 @@ const subdivisionSelect = document.getElementById("subdivision");
 const subdivisionGrid = document.getElementById("subdivision-grid");
 
 const TIME_SIGNATURES = [
+  { label: "4/4", beatsPerBar: 4, noteValue: 4 },
   { label: "2/4", beatsPerBar: 2, noteValue: 4 },
   { label: "3/4", beatsPerBar: 3, noteValue: 4 },
-  { label: "4/4", beatsPerBar: 4, noteValue: 4 },
   { label: "5/4", beatsPerBar: 5, noteValue: 4 },
   { label: "6/8", beatsPerBar: 6, noteValue: 8 },
   { label: "7/8", beatsPerBar: 7, noteValue: 8 },
@@ -29,7 +29,7 @@ const SUBDIVISIONS = [
 const state = {
   bpm: 120,
   isPlaying: false,
-  timeSignatureIndex: 2,
+  timeSignatureIndex: 0,
   subdivisionIndex: 1,
   activeIndex: 0,
   soundStates: [],
