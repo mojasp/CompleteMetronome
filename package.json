@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run minify",
+    "minify": "esbuild dist/app.js dist/audio.js dist/types.js dist/ui.js --minify --outdir=dist --allow-overwrite",
     "typecheck": "tsc --noEmit",
     "watch": "tsc --watch"
   },
   "devDependencies": {
+    "esbuild": "^0.24.0",
     "typescript": "^5.5.4"
   }
 }
