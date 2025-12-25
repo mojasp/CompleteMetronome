@@ -234,6 +234,14 @@ h1 {
   background: #e86c6c;
 }
 
+.transport-button:hover,
+.trainer-disclosure:hover,
+.accent-disclosure:hover,
+.random-mute-disclosure:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(31, 28, 26, 0.16);
+}
+
 .trainer-disclosure {
   border: 1px solid rgba(31, 28, 26, 0.2);
   border-radius: 12px;
@@ -256,11 +264,52 @@ h1 {
   color: rgba(31, 28, 26, 0.45);
 }
 
+.random-mute-disclosure {
+  border: 1px solid rgba(31, 28, 26, 0.2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  font-family: var(--font-display);
+  cursor: pointer;
+}
+
+.random-mute-disclosure.is-enabled {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: white;
+}
+
+.random-mute-disclosure.is-disabled {
+  border-color: rgba(31, 28, 26, 0.12);
+  color: rgba(31, 28, 26, 0.45);
+}
+
+.random-mute-disclosure.is-ramping {
+  background: linear-gradient(
+    90deg,
+    var(--accent-2) 0%,
+    var(--accent-2) var(--fill, 0%),
+    rgba(42, 157, 143, 0.15) var(--fill, 0%),
+    rgba(42, 157, 143, 0.15) 100%
+  );
+}
+
 .trainer-panel {
   display: none;
 }
 
 .trainer-panel.is-open {
+  display: grid;
+  gap: 8px;
+}
+
+.random-mute-panel {
+  display: none;
+}
+
+.random-mute-panel.is-open {
   display: grid;
   gap: 8px;
 }
@@ -300,6 +349,27 @@ h1 {
   grid-template-columns: 1fr auto 1fr auto;
   align-items: center;
   gap: 8px;
+}
+
+.random-mute-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.random-mute-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.random-mute-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  font-family: var(--font-display);
 }
 
 .trainer-separator {

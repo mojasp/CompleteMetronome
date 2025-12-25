@@ -24,6 +24,12 @@ const trainerBarsSelect = getElement<HTMLSelectElement>("trainer-bars");
 const trainerBpmSelect = getElement<HTMLSelectElement>("trainer-bpm");
 const trainerSecondsSelect = getElement<HTMLSelectElement>("trainer-seconds");
 const trainerSecondsBpmSelect = getElement<HTMLSelectElement>("trainer-seconds-bpm");
+const randomMuteDisclosure = getElement<HTMLButtonElement>("random-mute-disclosure");
+const randomMutePanel = getElement<HTMLDivElement>("random-mute-panel");
+const randomMutePercentSelect = getElement<HTMLSelectElement>("random-mute-percent");
+const randomMuteGradualToggle = getElement<HTMLInputElement>("random-mute-gradual");
+const randomMuteCountInToggle = getElement<HTMLInputElement>("random-mute-countin");
+const randomMuteCountInBarsSelect = getElement<HTMLSelectElement>("random-mute-countin-bars");
 const accentDisclosure = getElement<HTMLButtonElement>("accent-disclosure");
 const accentPanel = getElement<HTMLDivElement>("accent-panel");
 const accentBarsSelect = getElement<HTMLSelectElement>("accent-bars");
@@ -89,6 +95,9 @@ const TRAINER_BARS = Array.from({ length: 12 }, (_, index) => index + 1);
 const TRAINER_BPM_STEPS = [1, 2, 3, 4, 5, 8, 10];
 const TRAINER_SECONDS = Array.from({ length: 36 }, (_, index) => (index + 1) * 10);
 const ACCENT_BARS = Array.from({ length: 63 }, (_, index) => index + 2);
+const RANDOM_MUTE_PERCENTS = Array.from({ length: 21 }, (_, index) => index * 5);
+const RANDOM_MUTE_COUNTIN_BARS = Array.from({ length: 65 }, (_, index) => index);
+const RANDOM_MUTE_RAMP_BARS = 16;
 
 type MetronomeState = {
   bpm: number;
@@ -110,6 +119,12 @@ type MetronomeState = {
   accentBarsIndex: number;
   accentEnabled: boolean;
   accentConfigured: boolean;
+  randomMutePercentIndex: number;
+  randomMuteGradual: boolean;
+  randomMuteCountInEnabled: boolean;
+  randomMuteCountInBarsIndex: number;
+  randomMuteEnabled: boolean;
+  randomMuteConfigured: boolean;
 };
 
 const state: MetronomeState = {
@@ -132,6 +147,12 @@ const state: MetronomeState = {
   accentBarsIndex: ACCENT_BARS.indexOf(12),
   accentEnabled: false,
   accentConfigured: false,
+  randomMutePercentIndex: 2,
+  randomMuteGradual: false,
+  randomMuteCountInEnabled: false,
+  randomMuteCountInBarsIndex: 0,
+  randomMuteEnabled: false,
+  randomMuteConfigured: false,
 };
 
 const ui = createUI({
@@ -177,6 +198,16 @@ function render() {
     : "Trainer";
   trainerDisclosure.classList.toggle("is-enabled", state.trainerEnabled);
   trainerDisclosure.classList.toggle("is-disabled", !state.trainerEnabled);
+  const randomMutePercent = RANDOM_MUTE_PERCENTS[state.randomMutePercentIndex];
+  randomMuteDisclosure.textContent = state.randomMuteConfigured
+    ? `Random mute: ${randomMutePercent}%`
+    : "Random mute";
+  randomMuteDisclosure.classList.toggle("is-enabled", state.randomMuteEnabled);
+  randomMuteDisclosure.classList.toggle("is-disabled", !state.randomMuteEnabled);
+  updateRandomMuteVisual();
+  randomMuteGradualToggle.checked = state.randomMuteGradual;
+  randomMuteCountInToggle.checked = state.randomMuteCountInEnabled;
+  randomMuteCountInBarsSelect.disabled = !state.randomMuteCountInEnabled;
   const accentBars = ACCENT_BARS[state.accentBarsIndex];
   accentDisclosure.textContent = state.accentConfigured
     ? `Accent every ${accentBars} bars`
@@ -202,6 +233,52 @@ function updateAudioSettings() {
     subdivisionsPerBeat: subdivision.perBeat,
     soundProfile: SOUND_PROFILES[state.soundProfileIndex],
   });
+}
+
+function randomMuteRampProgress() {
+  if (!state.randomMuteEnabled || !state.randomMuteGradual) {
+    return null;
+  }
+  let barsElapsed = state.barCount;
+  if (state.randomMuteCountInEnabled) {
+    const countInBars = RANDOM_MUTE_COUNTIN_BARS[state.randomMuteCountInBarsIndex];
+    if (barsElapsed <= countInBars) {
+      return 0;
+    }
+    barsElapsed -= countInBars;
+  }
+  return Math.min(1, Math.max(0, barsElapsed / RANDOM_MUTE_RAMP_BARS));
+}
+
+function updateRandomMuteVisual() {
+  const progress = randomMuteRampProgress();
+  if (progress === null) {
+    randomMuteDisclosure.classList.remove("is-ramping");
+    randomMuteDisclosure.style.removeProperty("--fill");
+    return;
+  }
+  randomMuteDisclosure.classList.add("is-ramping");
+  randomMuteDisclosure.style.setProperty("--fill", `${Math.round(progress * 100)}%`);
+}
+
+function currentRandomMuteProbability() {
+  if (!state.randomMuteEnabled) {
+    return 0;
+  }
+  const target = RANDOM_MUTE_PERCENTS[state.randomMutePercentIndex] / 100;
+  let barsElapsed = state.barCount;
+  if (state.randomMuteCountInEnabled) {
+    const countInBars = RANDOM_MUTE_COUNTIN_BARS[state.randomMuteCountInBarsIndex];
+    if (barsElapsed <= countInBars) {
+      return 0;
+    }
+    barsElapsed -= countInBars;
+  }
+  if (state.randomMuteGradual) {
+    const rampFactor = Math.min(1, Math.max(0, barsElapsed / RANDOM_MUTE_RAMP_BARS));
+    return target * rampFactor;
+  }
+  return target;
 }
 
 function stopTrainerInterval() {
@@ -248,20 +325,28 @@ async function startPlayback() {
             }
           }
         }
+        updateRandomMuteVisual();
       }
     },
     getSoundState: (tickIndex: number) => {
       const baseState = state.soundStates[tickIndex] || "mute";
-      if (tickIndex !== 0) {
-        return baseState;
+      let resolvedState = baseState;
+      if (tickIndex === 0) {
+        state.barCount += 1;
+        if (state.accentEnabled && baseState !== "A") {
+          const accentEvery = ACCENT_BARS[state.accentBarsIndex];
+          const shouldAccent = (state.barCount - 1) % accentEvery === 0;
+          resolvedState = shouldAccent ? "A" : baseState;
+        }
       }
-      state.barCount += 1;
-      if (baseState === "A" || !state.accentEnabled) {
-        return baseState;
+      if (resolvedState === "mute") {
+        return "mute";
       }
-      const accentEvery = ACCENT_BARS[state.accentBarsIndex];
-      const shouldAccent = (state.barCount - 1) % accentEvery === 0;
-      return shouldAccent ? "A" : baseState;
+      const probability = currentRandomMuteProbability();
+      if (probability > 0 && Math.random() < probability) {
+        return "mute";
+      }
+      return resolvedState;
     },
   });
 }
@@ -391,6 +476,14 @@ function setupControls() {
     TRAINER_BPM_STEPS.map((value) => ({ label: String(value) })),
   );
   ui.populateSelect(
+    randomMutePercentSelect,
+    RANDOM_MUTE_PERCENTS.map((value) => ({ label: String(value) })),
+  );
+  ui.populateSelect(
+    randomMuteCountInBarsSelect,
+    RANDOM_MUTE_COUNTIN_BARS.map((value) => ({ label: String(value) })),
+  );
+  ui.populateSelect(
     accentBarsSelect,
     ACCENT_BARS.map((value) => ({ label: String(value) })),
   );
@@ -402,6 +495,8 @@ function setupControls() {
   ui.setSelectValue(trainerBpmSelect, state.trainerBpmIndex);
   ui.setSelectValue(trainerSecondsSelect, state.trainerSecondsIndex);
   ui.setSelectValue(trainerSecondsBpmSelect, state.trainerSecondsBpmIndex);
+  ui.setSelectValue(randomMutePercentSelect, state.randomMutePercentIndex);
+  ui.setSelectValue(randomMuteCountInBarsSelect, state.randomMuteCountInBarsIndex);
   ui.setSelectValue(accentBarsSelect, state.accentBarsIndex);
 
   const unlockAudio = () => {
@@ -479,6 +574,20 @@ function setupControls() {
     render();
   });
 
+  randomMuteDisclosure.addEventListener("click", () => {
+    if (state.randomMuteEnabled) {
+      state.randomMuteEnabled = false;
+      randomMutePanel.classList.remove("is-open");
+      randomMuteDisclosure.setAttribute("aria-expanded", "false");
+      render();
+      return;
+    }
+    state.randomMuteEnabled = true;
+    randomMutePanel.classList.add("is-open");
+    randomMuteDisclosure.setAttribute("aria-expanded", "true");
+    render();
+  });
+
   accentDisclosure.addEventListener("click", () => {
     if (state.accentEnabled) {
       state.accentEnabled = false;
@@ -521,6 +630,21 @@ function setupControls() {
     }
     trainerPanel.classList.remove("is-open");
     trainerDisclosure.setAttribute("aria-expanded", "false");
+  });
+
+  document.addEventListener("click", (event: MouseEvent) => {
+    if (!randomMutePanel.classList.contains("is-open")) {
+      return;
+    }
+    const target = event.target as Node | null;
+    if (!target) {
+      return;
+    }
+    if (randomMutePanel.contains(target) || randomMuteDisclosure.contains(target)) {
+      return;
+    }
+    randomMutePanel.classList.remove("is-open");
+    randomMuteDisclosure.setAttribute("aria-expanded", "false");
   });
 
   timeSignatureNumeratorSelect.addEventListener("change", (event: Event) => {
@@ -609,6 +733,38 @@ function setupControls() {
     state.trainerMode = "seconds";
     state.trainerConfigured = true;
     startTrainerInterval();
+    render();
+  });
+
+  randomMutePercentSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.randomMutePercentIndex = Number(target.value);
+    state.randomMuteConfigured = true;
+    render();
+  });
+
+  randomMuteGradualToggle.addEventListener("change", () => {
+    state.randomMuteGradual = randomMuteGradualToggle.checked;
+    state.randomMuteConfigured = true;
+    render();
+  });
+
+  randomMuteCountInToggle.addEventListener("change", () => {
+    state.randomMuteCountInEnabled = randomMuteCountInToggle.checked;
+    state.randomMuteConfigured = true;
+    render();
+  });
+
+  randomMuteCountInBarsSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    state.randomMuteCountInBarsIndex = Number(target.value);
+    state.randomMuteConfigured = true;
     render();
   });
 
