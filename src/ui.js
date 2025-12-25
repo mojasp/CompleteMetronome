@@ -2,6 +2,7 @@ const SOUND_STATES = ["A", "B", "mute"];
 
 export function createUI({
   tempoValue,
+  tempoWheelValue,
   tempoUp,
   tempoDown,
   togglePlay,
@@ -16,6 +17,9 @@ export function createUI({
 
   function setTempoDisplay(bpm) {
     tempoValue.textContent = String(bpm);
+    if (tempoWheelValue) {
+      tempoWheelValue.textContent = String(bpm);
+    }
   }
 
   function populateSelect(select, options) {

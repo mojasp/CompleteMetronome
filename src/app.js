@@ -2,9 +2,12 @@ import { createMetronomeAudio } from "./audio.js";
 import { createUI } from "./ui.js";
 
 const tempoValue = document.getElementById("tempo-value");
+const tempoWheelValue = document.getElementById("tempo-wheel-value");
 const tempoUp = document.getElementById("tempo-up");
 const tempoDown = document.getElementById("tempo-down");
 const tempoBlock = document.getElementById("tempo-block");
+const tempoWheel = document.getElementById("tempo-wheel");
+const soundProfileSelect = document.getElementById("sound-profile");
 const togglePlay = document.getElementById("toggle-play");
 const timeSignatureSelect = document.getElementById("time-signature");
 const subdivisionSelect = document.getElementById("subdivision");
@@ -26,17 +29,48 @@ const SUBDIVISIONS = [
   { label: "Sixteenth", perBeat: 4 },
 ];
 
+const SOUND_PROFILES = [
+  {
+    label: "Bright",
+    accent: { type: "square", frequency: 1400, volume: 0.22, decay: 0.04, duration: 0.05 },
+    regular: { type: "square", frequency: 900, volume: 0.16, decay: 0.04, duration: 0.05 },
+  },
+  {
+    label: "Wood",
+    accent: { type: "triangle", frequency: 1200, volume: 0.18, decay: 0.05, duration: 0.06 },
+    regular: { type: "triangle", frequency: 760, volume: 0.13, decay: 0.05, duration: 0.06 },
+  },
+  {
+    label: "Soft",
+    accent: { type: "sine", frequency: 1100, volume: 0.2, decay: 0.08, duration: 0.09 },
+    regular: { type: "sine", frequency: 720, volume: 0.14, decay: 0.08, duration: 0.09 },
+  },
+  {
+    label: "Sharp",
+    accent: { type: "square", frequency: 1800, volume: 0.2, decay: 0.03, duration: 0.04 },
+    regular: { type: "square", frequency: 1200, volume: 0.13, decay: 0.03, duration: 0.04 },
+  },
+];
+
+const BPM_MIN = 20;
+const BPM_MAX = 300;
+const WHEEL_MIN_ANGLE = 225;
+const WHEEL_MAX_ANGLE = 135;
+const WHEEL_ARC = 270;
+
 const state = {
   bpm: 120,
   isPlaying: false,
   timeSignatureIndex: 0,
   subdivisionIndex: 0,
+  soundProfileIndex: 0,
   activeIndex: 0,
   soundStates: [],
 };
 
 const ui = createUI({
   tempoValue,
+  tempoWheelValue,
   tempoUp,
   tempoDown,
   togglePlay,
@@ -73,6 +107,7 @@ function initSoundStates() {
 function render() {
   ui.setTempoDisplay(state.bpm);
   ui.setPlayState(state.isPlaying);
+  updateWheelDisplay();
   ui.renderSubdivisionGrid({
     totalSubdivisions: totalSubdivisions(),
     subdivisionsPerBeat: SUBDIVISIONS[state.subdivisionIndex].perBeat,
@@ -89,6 +124,7 @@ function updateAudioSettings() {
     bpm: state.bpm,
     beatsPerBar: timeSignature.beatsPerBar,
     subdivisionsPerBeat: subdivision.perBeat,
+    soundProfile: SOUND_PROFILES[state.soundProfileIndex],
   });
 }
 
@@ -100,6 +136,7 @@ async function startPlayback() {
     bpm: state.bpm,
     beatsPerBar: timeSignature.beatsPerBar,
     subdivisionsPerBeat: subdivision.perBeat,
+    soundProfile: SOUND_PROFILES[state.soundProfileIndex],
     onTick: (tickIndex) => {
       state.activeIndex = tickIndex;
       render();
@@ -128,16 +165,99 @@ async function togglePlayback() {
 }
 
 function adjustTempo(delta) {
-  state.bpm = Math.min(300, Math.max(20, state.bpm + delta));
+  setTempo(state.bpm + delta);
+}
+
+function setTempo(nextBpm) {
+  state.bpm = Math.min(BPM_MAX, Math.max(BPM_MIN, nextBpm));
   updateAudioSettings();
   render();
+}
+
+function setSoundProfile(nextIndex) {
+  state.soundProfileIndex = Math.max(0, Math.min(SOUND_PROFILES.length - 1, nextIndex));
+  updateAudioSettings();
+  render();
+}
+
+function clampDialAngle(angle) {
+  if (angle > WHEEL_MAX_ANGLE && angle < WHEEL_MIN_ANGLE) {
+    return angle < 180 ? WHEEL_MAX_ANGLE : WHEEL_MIN_ANGLE;
+  }
+  return angle;
+}
+
+function angleToProgress(angle) {
+  const clamped = clampDialAngle(angle);
+  if (clamped >= WHEEL_MIN_ANGLE) {
+    return (clamped - WHEEL_MIN_ANGLE) / WHEEL_ARC;
+  }
+  return (clamped + (360 - WHEEL_MIN_ANGLE)) / WHEEL_ARC;
+}
+
+function progressToAngle(progress) {
+  const angle = WHEEL_MIN_ANGLE + progress * WHEEL_ARC;
+  return angle >= 360 ? angle - 360 : angle;
+}
+
+function angleFromPointer(event, element) {
+  const rect = element.getBoundingClientRect();
+  const x = event.clientX - (rect.left + rect.width / 2);
+  const y = event.clientY - (rect.top + rect.height / 2);
+  const angle = Math.atan2(y, x) * (180 / Math.PI);
+  return (angle + 450) % 360;
+}
+
+function updateWheelDisplay() {
+  const tempoProgress = (state.bpm - BPM_MIN) / (BPM_MAX - BPM_MIN);
+  const tempoAngle = progressToAngle(tempoProgress);
+  tempoWheel.style.setProperty("--angle", `${tempoAngle}deg`);
+  tempoWheel.setAttribute("aria-valuenow", String(state.bpm));
+}
+
+function attachWheelControls() {
+  if (!window.matchMedia("(max-width: 720px)").matches) {
+    return;
+  }
+
+  let isActive = false;
+
+  const handlePointer = (event) => {
+    if (!isActive) {
+      return;
+    }
+    event.preventDefault();
+    const angle = angleFromPointer(event, tempoWheel);
+    const progress = angleToProgress(angle);
+    const nextBpm = Math.round(BPM_MIN + progress * (BPM_MAX - BPM_MIN));
+    setTempo(nextBpm);
+  };
+
+  const handlePointerUp = (event) => {
+    if (!isActive) {
+      return;
+    }
+    tempoWheel.releasePointerCapture(event.pointerId);
+    isActive = false;
+  };
+
+  tempoWheel.addEventListener("pointerdown", (event) => {
+    isActive = true;
+    tempoWheel.setPointerCapture(event.pointerId);
+    handlePointer(event);
+  });
+  tempoWheel.addEventListener("pointermove", handlePointer);
+  tempoWheel.addEventListener("pointerup", handlePointerUp);
+  tempoWheel.addEventListener("pointercancel", handlePointerUp);
 }
 
 function setupControls() {
   ui.populateSelect(timeSignatureSelect, TIME_SIGNATURES);
   ui.populateSelect(subdivisionSelect, SUBDIVISIONS);
+  ui.populateSelect(soundProfileSelect, SOUND_PROFILES);
   ui.setSelectValue(timeSignatureSelect, state.timeSignatureIndex);
   ui.setSelectValue(subdivisionSelect, state.subdivisionIndex);
+  ui.setSelectValue(soundProfileSelect, state.soundProfileIndex);
 
   const unlockAudio = () => {
     void audio.resume();
@@ -157,6 +277,8 @@ function setupControls() {
     adjustTempo(event.deltaY > 0 ? -1 : 1);
   });
 
+  attachWheelControls();
+
   togglePlay.addEventListener("click", () => {
     void togglePlayback();
   });
@@ -173,6 +295,10 @@ function setupControls() {
     initSoundStates();
     updateAudioSettings();
     render();
+  });
+
+  soundProfileSelect.addEventListener("change", (event) => {
+    setSoundProfile(Number(event.target.value));
   });
 
   subdivisionGrid.addEventListener("click", (event) => {
