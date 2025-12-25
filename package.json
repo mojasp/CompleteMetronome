@@ -4,12 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun build src/app.ts --outdir=dist --target=browser --format=esm --minify",
+    "build:app": "bun build src/app.ts --outdir=dist --target=browser --format=esm --minify",
+    "copy:static": "bun scripts/copy-static.ts",
+    "build": "bun run build:app && bun run copy:static",
     "test": "bun test --dom",
     "typecheck": "bun x tsc --noEmit",
-    "watch": "bun build src/app.ts --outdir=dist --target=browser --format=esm --watch"
+    "watch": "bun run build:app --watch",
+    "cap:sync": "bunx cap sync",
+    "cap:open": "bunx cap open android"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.0.0"
   }
 }

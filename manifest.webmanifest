@@ -1,0 +1,16 @@
+{
+  "name": "Simple Metronome",
+  "short_name": "Metronome",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f7f1e6",
+  "theme_color": "#ff7a59",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

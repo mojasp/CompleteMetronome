@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Simple Metronome</string>
+    <string name="title_activity_main">Simple Metronome</string>
+    <string name="package_name">com.simplemetronome.app</string>
+    <string name="custom_url_scheme">com.simplemetronome.app</string>
+</resources>

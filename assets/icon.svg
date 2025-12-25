@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Metronome">
+  <rect width="512" height="512" rx="96" fill="#f7f1e6"/>
+  <path d="M256 96l144 288H112L256 96z" fill="#ff7a59"/>
+  <rect x="246" y="150" width="20" height="210" rx="10" fill="#1f1c1a"/>
+  <circle cx="312" cy="200" r="18" fill="#1f1c1a"/>
+</svg>
