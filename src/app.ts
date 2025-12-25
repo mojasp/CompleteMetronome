@@ -24,7 +24,6 @@ const trainerDisclosure = getElement<HTMLButtonElement>("trainer-disclosure");
 const trainerPanel = getElement<HTMLDivElement>("trainer-panel");
 const trainerBarsSelect = getElement<HTMLSelectElement>("trainer-bars");
 const trainerBpmSelect = getElement<HTMLSelectElement>("trainer-bpm");
-const trainerToggle = getElement<HTMLButtonElement>("trainer-toggle");
 const accentDisclosure = getElement<HTMLButtonElement>("accent-disclosure");
 const accentPanel = getElement<HTMLDivElement>("accent-panel");
 const accentBarsSelect = getElement<HTMLSelectElement>("accent-bars");
@@ -131,7 +130,6 @@ const ui = createUI({
   tempoUp,
   tempoDown,
   togglePlay,
-  trainerToggle,
   subdivisionSelect,
   subdivisionGrid,
 });
@@ -162,12 +160,12 @@ function initSoundStates() {
 function render() {
   ui.setTempoDisplay(state.bpm);
   ui.setPlayState(state.isPlaying);
-  ui.setTrainerState(state.trainerEnabled);
   const trainerBars = TRAINER_BARS[state.trainerBarsIndex];
   const trainerStep = TRAINER_BPM_STEPS[state.trainerBpmIndex];
   trainerDisclosure.textContent = state.trainerEnabled
-    ? `Trainer: +${trainerStep} BPM / ${trainerBars} bars`
-    : "Trainer: off";
+    ? `Trainer: +${trainerStep} BPM every ${trainerBars} bars`
+    : "Trainer";
+  trainerDisclosure.classList.toggle("is-enabled", state.trainerEnabled);
   const accentBars = ACCENT_BARS[state.accentBarsIndex];
   accentDisclosure.textContent = state.accentEnabled ? `Accent every ${accentBars} bars` : "Accent";
   accentDisclosure.classList.toggle("is-enabled", state.accentEnabled);
@@ -422,8 +420,17 @@ function setupControls() {
   });
 
   trainerDisclosure.addEventListener("click", () => {
-    const isOpen = trainerPanel.classList.toggle("is-open");
-    trainerDisclosure.setAttribute("aria-expanded", String(isOpen));
+    if (state.trainerEnabled) {
+      state.trainerEnabled = false;
+      trainerPanel.classList.remove("is-open");
+      trainerDisclosure.setAttribute("aria-expanded", "false");
+      render();
+      return;
+    }
+    state.trainerEnabled = true;
+    trainerPanel.classList.add("is-open");
+    trainerDisclosure.setAttribute("aria-expanded", "true");
+    render();
   });
 
   accentDisclosure.addEventListener("click", () => {
@@ -455,9 +462,19 @@ function setupControls() {
     accentDisclosure.setAttribute("aria-expanded", "false");
   });
 
-  trainerToggle.addEventListener("click", () => {
-    state.trainerEnabled = !state.trainerEnabled;
-    render();
+  document.addEventListener("click", (event: MouseEvent) => {
+    if (!trainerPanel.classList.contains("is-open")) {
+      return;
+    }
+    const target = event.target as Node | null;
+    if (!target) {
+      return;
+    }
+    if (trainerPanel.contains(target) || trainerDisclosure.contains(target)) {
+      return;
+    }
+    trainerPanel.classList.remove("is-open");
+    trainerDisclosure.setAttribute("aria-expanded", "false");
   });
 
   timeSignatureNumeratorSelect.addEventListener("change", (event: Event) => {

@@ -259,6 +259,12 @@ h1 {
   cursor: pointer;
 }
 
+.trainer-disclosure.is-enabled {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: white;
+}
+
 .trainer-panel {
   display: none;
 }
@@ -305,20 +311,6 @@ h1 {
   color: var(--ink-soft);
 }
 
-.trainer-toggle {
-  border: none;
-  border-radius: 12px;
-  background: var(--accent-2);
-  color: white;
-  padding: 10px 14px;
-  font-size: 0.85rem;
-  font-family: var(--font-display);
-  cursor: pointer;
-}
-
-.trainer-toggle.is-enabled {
-  background: #2a9d8f;
-}
 
 select {
   border-radius: 12px;

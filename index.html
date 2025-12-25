@@ -56,16 +56,21 @@
         <div class="transport">
           <button class="transport-button" id="toggle-play" type="button">Start</button>
           <p class="transport-hint">Space to start/stop</p>
-          <button class="trainer-disclosure" id="trainer-disclosure" type="button" aria-expanded="false" aria-controls="trainer-panel">
+          <button
+            class="trainer-disclosure"
+            id="trainer-disclosure"
+            type="button"
+            aria-expanded="false"
+            aria-controls="trainer-panel"
+          >
             Trainer
           </button>
           <div class="trainer-panel" id="trainer-panel">
             <div class="trainer-controls">
-              <select id="trainer-bars" aria-label="Trainer bars interval"></select>
-              <span class="trainer-separator" aria-hidden="true">bars</span>
               <select id="trainer-bpm" aria-label="Trainer tempo increment"></select>
               <span class="trainer-separator" aria-hidden="true">BPM</span>
-              <button class="trainer-toggle" id="trainer-toggle" type="button">Enable</button>
+              <select id="trainer-bars" aria-label="Trainer bars interval"></select>
+              <span class="trainer-separator" aria-hidden="true">bars</span>
             </div>
           </div>
         </div>

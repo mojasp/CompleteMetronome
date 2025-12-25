@@ -9,7 +9,6 @@ type UIElements = {
   tempoUp: HTMLButtonElement;
   tempoDown: HTMLButtonElement;
   togglePlay: HTMLButtonElement;
-  trainerToggle: HTMLButtonElement;
   subdivisionSelect: HTMLSelectElement;
   subdivisionGrid: HTMLDivElement;
 };
@@ -30,7 +29,6 @@ export function createUI({
   tempoUp,
   tempoDown,
   togglePlay,
-  trainerToggle,
   subdivisionSelect,
   subdivisionGrid,
 }: UIElements) {
@@ -40,11 +38,6 @@ export function createUI({
   function setPlayState(isPlaying: boolean) {
     togglePlay.textContent = isPlaying ? "Stop" : "Start";
     togglePlay.classList.toggle("is-playing", isPlaying);
-  }
-
-  function setTrainerState(isEnabled: boolean) {
-    trainerToggle.textContent = isEnabled ? "Enabled" : "Enable";
-    trainerToggle.classList.toggle("is-enabled", isEnabled);
   }
 
   function setTempoDisplay(bpm: number) {
@@ -127,7 +120,6 @@ export function createUI({
 
   return {
     setPlayState,
-    setTrainerState,
     setTempoDisplay,
     populateSelect,
     setSelectValue,
