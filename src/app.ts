@@ -28,7 +28,6 @@ const trainerToggle = getElement<HTMLButtonElement>("trainer-toggle");
 const accentDisclosure = getElement<HTMLButtonElement>("accent-disclosure");
 const accentPanel = getElement<HTMLDivElement>("accent-panel");
 const accentBarsSelect = getElement<HTMLSelectElement>("accent-bars");
-const accentToggle = getElement<HTMLButtonElement>("accent-toggle");
 const timeSignatureNumeratorSelect = getElement<HTMLSelectElement>("time-signature-numerator");
 const timeSignatureDenominatorSelect = getElement<HTMLSelectElement>("time-signature-denominator");
 const subdivisionSelect = getElement<HTMLSelectElement>("subdivision");
@@ -89,7 +88,7 @@ const BPM_MAX = 300;
 const BPM_PER_DEGREE = 0.25;
 const TRAINER_BARS = Array.from({ length: 12 }, (_, index) => index + 1);
 const TRAINER_BPM_STEPS = [1, 2, 3, 4, 5, 8, 10];
-const ACCENT_BARS = Array.from({ length: 64 }, (_, index) => index + 1);
+const ACCENT_BARS = Array.from({ length: 63 }, (_, index) => index + 2);
 
 type MetronomeState = {
   bpm: number;
@@ -170,14 +169,8 @@ function render() {
     ? `Trainer: +${trainerStep} BPM / ${trainerBars} bars`
     : "Trainer: off";
   const accentBars = ACCENT_BARS[state.accentBarsIndex];
-  accentDisclosure.textContent = state.accentEnabled
-    ? accentBars === 1
-      ? "Accent: every bar"
-      : `Accent: every ${accentBars} bars`
-    : "Accent";
+  accentDisclosure.textContent = state.accentEnabled ? `Every ${accentBars} bars` : "Accent";
   accentDisclosure.classList.toggle("is-enabled", state.accentEnabled);
-  accentToggle.textContent = state.accentEnabled ? "Enabled" : "Enable";
-  accentToggle.classList.toggle("is-enabled", state.accentEnabled);
   updateWheelDisplay();
   ui.renderSubdivisionGrid({
     totalSubdivisions: totalSubdivisions(),
@@ -229,15 +222,12 @@ async function startPlayback() {
         return baseState;
       }
       state.barCount += 1;
-      if (!state.accentEnabled) {
+      if (baseState === "A" || !state.accentEnabled) {
         return baseState;
       }
       const accentEvery = ACCENT_BARS[state.accentBarsIndex];
       const shouldAccent = (state.barCount - 1) % accentEvery === 0;
-      if (shouldAccent) {
-        return "A";
-      }
-      return baseState === "mute" ? "mute" : "B";
+      return shouldAccent ? "A" : baseState;
     },
   });
 }
@@ -437,13 +427,32 @@ function setupControls() {
   });
 
   accentDisclosure.addEventListener("click", () => {
-    const isOpen = accentPanel.classList.toggle("is-open");
-    accentDisclosure.setAttribute("aria-expanded", String(isOpen));
+    if (state.accentEnabled) {
+      state.accentEnabled = false;
+      accentPanel.classList.remove("is-open");
+      accentDisclosure.setAttribute("aria-expanded", "false");
+      render();
+      return;
+    }
+    state.accentEnabled = true;
+    accentPanel.classList.add("is-open");
+    accentDisclosure.setAttribute("aria-expanded", "true");
+    render();
   });
 
-  accentToggle.addEventListener("click", () => {
-    state.accentEnabled = !state.accentEnabled;
-    render();
+  document.addEventListener("click", (event: MouseEvent) => {
+    if (!accentPanel.classList.contains("is-open")) {
+      return;
+    }
+    const target = event.target as Node | null;
+    if (!target) {
+      return;
+    }
+    if (accentPanel.contains(target) || accentDisclosure.contains(target)) {
+      return;
+    }
+    accentPanel.classList.remove("is-open");
+    accentDisclosure.setAttribute("aria-expanded", "false");
   });
 
   trainerToggle.addEventListener("click", () => {

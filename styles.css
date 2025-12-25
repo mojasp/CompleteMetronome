@@ -387,21 +387,6 @@ select {
   font-size: 0.75rem;
 }
 
-.accent-toggle {
-  border: none;
-  border-radius: 10px;
-  background: var(--accent-2);
-  color: white;
-  padding: 6px 10px;
-  font-size: 0.72rem;
-  font-family: var(--font-display);
-  cursor: pointer;
-}
-
-.accent-toggle.is-enabled {
-  background: #1f7f73;
-}
-
 .subdivision-grid {
   display: grid;
   gap: 10px;
