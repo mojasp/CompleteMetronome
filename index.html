@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simple Metronome</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="background-shapes" aria-hidden="true">
+      <div class="shape shape-a"></div>
+      <div class="shape shape-b"></div>
+      <div class="shape shape-c"></div>
+    </div>
+
+    <header class="app-header">
+      <p class="app-kicker">Local Web Metronome</p>
+      <h1>Simple Metronome</h1>
+      <p class="app-subtitle">Tight timing, clear accents, no backend.</p>
+    </header>
+
+    <main class="app-shell">
+      <section class="panel controls">
+        <div class="tempo-block" id="tempo-block" aria-label="Tempo control">
+          <p class="label">Tempo</p>
+          <div class="tempo-display">
+            <button class="tempo-step" id="tempo-down" type="button" aria-label="Decrease tempo">-</button>
+            <div class="tempo-value" id="tempo-value">120</div>
+            <button class="tempo-step" id="tempo-up" type="button" aria-label="Increase tempo">+</button>
+          </div>
+          <p class="tempo-hint">Scroll to adjust</p>
+        </div>
+
+        <div class="transport">
+          <button class="transport-button" id="toggle-play" type="button">Start</button>
+          <p class="transport-hint">Space to start/stop</p>
+        </div>
+
+        <div class="selectors">
+          <label class="select-field">
+            <span class="label">Time signature</span>
+            <select id="time-signature"></select>
+          </label>
+
+          <label class="select-field">
+            <span class="label">Subdivision</span>
+            <select id="subdivision"></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel grid-panel">
+        <div class="grid-header">
+          <p class="label">Current bar</p>
+          <p class="grid-legend">Click a cell to cycle: A → B → Mute</p>
+        </div>
+        <div class="subdivision-grid" id="subdivision-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

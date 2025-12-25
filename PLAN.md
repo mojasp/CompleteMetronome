@@ -14,11 +14,12 @@
 ## UX & Interaction
 - Primary controls: start/stop, BPM display with step buttons, subdivision selector, time signature selector.
 - Scroll interaction: hover BPM control and scroll to adjust.
-- Keybindings (initial proposal):
+- Keybindings:
   - Space: start/stop
-  - Up/Down: BPM +/−
-  - Left/Right: change subdivision
-- Playback display: bar grid with clickable subdivisions; highlight current beat.
+  - j/k: BPM −/+
+  - J/K (shifted): BPM −/+ by 5
+- Subdivision selector: menu/dropdown (no keybinding needed).
+- Playback display: single-bar grid with clickable subdivisions; highlight current subdivision; beat boundaries grouped.
 
 ## Audio Engine
 - Use Web Audio API.
