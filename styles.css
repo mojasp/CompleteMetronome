@@ -297,8 +297,16 @@ h1 {
 .selectors {
   display: grid;
   gap: 16px;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
 }
 
+.select-field--sound {
+  grid-column: 1;
+}
+
+.select-field--accent {
+  grid-column: 2;
+}
 
 .select-field {
   display: grid;
@@ -372,15 +380,8 @@ select {
   width: 100%;
 }
 
-.grid-header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 12px;
-}
-
 .accent-controls {
-  display: grid;
+  display: inline-grid;
   justify-items: end;
   gap: 6px;
 }
@@ -501,11 +502,21 @@ select {
     order: 3;
   }
 
-  .transport-tools {
+  .selectors {
     order: 4;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    gap: 12px;
   }
 
-  .selectors {
+  .select-field--sound {
+    grid-column: 1;
+  }
+
+  .select-field--accent {
+    grid-column: 2;
+  }
+
+  .transport-tools {
     order: 5;
   }
 
@@ -527,7 +538,4 @@ select {
     display: block;
   }
 
-  .grid-header {
-    grid-template-columns: 1fr;
-  }
 }
