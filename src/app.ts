@@ -158,11 +158,7 @@ function initSoundStates() {
   const perBeat = SUBDIVISIONS[state.subdivisionIndex].perBeat;
   const nextStates: SoundState[] = [];
   for (let i = 0; i < total; i += 1) {
-    if (i === 0) {
-      nextStates.push("A");
-    } else {
-      nextStates.push("B");
-    }
+    nextStates.push("B");
   }
   state.soundStates = nextStates;
 }
