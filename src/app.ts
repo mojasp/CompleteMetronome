@@ -13,8 +13,6 @@ function getElement<T extends HTMLElement>(id: string): T {
 const tempoValue = getElement<HTMLElement>("tempo-value");
 const tempoInput = getElement<HTMLInputElement>("tempo-input");
 const tempoWheelValue = getElement<HTMLElement>("tempo-wheel-value");
-const tempoUp = getElement<HTMLButtonElement>("tempo-up");
-const tempoDown = getElement<HTMLButtonElement>("tempo-down");
 const tempoBlock = getElement<HTMLDivElement>("tempo-block");
 const tempoDisplay = getElement<HTMLDivElement>("tempo-display");
 const tempoWheel = getElement<HTMLDivElement>("tempo-wheel");
@@ -127,8 +125,6 @@ const ui = createUI({
   tempoValue,
   tempoInput,
   tempoWheelValue,
-  tempoUp,
-  tempoDown,
   togglePlay,
   subdivisionSelect,
   subdivisionGrid,
@@ -366,9 +362,6 @@ function setupControls() {
       passive: true,
     });
   });
-
-  tempoUp.addEventListener("click", () => adjustTempo(1));
-  tempoDown.addEventListener("click", () => adjustTempo(-1));
 
   const tempoInputMedia = window.matchMedia("(max-width: 720px)");
 

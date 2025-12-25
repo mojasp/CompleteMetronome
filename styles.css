@@ -202,20 +202,6 @@ h1 {
   color: var(--ink-soft);
 }
 
-.tempo-step {
-  border: none;
-  background: var(--accent);
-  color: white;
-  border-radius: 14px;
-  width: 42px;
-  height: 42px;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-.tempo-step:active {
-  transform: translateY(1px);
-}
 
 .tempo-hint,
 .transport-hint {
