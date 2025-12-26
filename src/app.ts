@@ -36,6 +36,7 @@ const accentBarsSelect = getElement<HTMLSelectElement>("accent-bars");
 const accentHost = getElement<HTMLDivElement>("accent-host");
 const accentBlock = getElement<HTMLDivElement>("accent-block");
 const selectors = getElement<HTMLDivElement>("selectors");
+const themeToggle = getElement<HTMLButtonElement>("theme-toggle");
 const timeSignatureNumeratorSelect = getElement<HTMLSelectElement>("time-signature-numerator");
 const timeSignatureDenominatorSelect = getElement<HTMLSelectElement>("time-signature-denominator");
 const subdivisionSelect = getElement<HTMLSelectElement>("subdivision");
@@ -101,6 +102,7 @@ const ACCENT_BARS = Array.from({ length: 63 }, (_, index) => index + 2);
 const RANDOM_MUTE_PERCENTS = Array.from({ length: 21 }, (_, index) => index * 5);
 const RANDOM_MUTE_COUNTIN_BARS = Array.from({ length: 65 }, (_, index) => index);
 const RANDOM_MUTE_RAMP_BARS = 16;
+const THEME_PREFERENCE_KEY = "theme-preference";
 
 type MetronomeState = {
   bpm: number;
@@ -129,6 +131,8 @@ type MetronomeState = {
   randomMuteEnabled: boolean;
   randomMuteConfigured: boolean;
 };
+
+type ThemePreference = "system" | "light" | "dark";
 
 const state: MetronomeState = {
   bpm: 120,
@@ -413,6 +417,39 @@ function updateWheelDisplay() {
   tempoWheel.setAttribute("aria-valuenow", String(state.bpm));
 }
 
+function readThemePreference(): ThemePreference {
+  try {
+    const value = localStorage.getItem(THEME_PREFERENCE_KEY);
+    if (value === "light" || value === "dark" || value === "system") {
+      return value;
+    }
+  } catch {
+    // Ignore storage errors.
+  }
+  return "system";
+}
+
+function writeThemePreference(preference: ThemePreference) {
+  try {
+    localStorage.setItem(THEME_PREFERENCE_KEY, preference);
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
+function applyThemePreference(preference: ThemePreference) {
+  if (preference === "system") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.setAttribute("data-theme", preference);
+  }
+}
+
+function updateThemeToggleLabel(preference: ThemePreference) {
+  themeToggle.textContent =
+    preference === "system" ? "Auto" : preference === "dark" ? "Dark" : "Light";
+}
+
 function syncAccentPlacement() {
   const isMobile = window.matchMedia("(max-width: 720px)").matches;
   if (isMobile) {
@@ -516,6 +553,30 @@ function setupControls() {
   ui.setSelectValue(randomMutePercentSelect, state.randomMutePercentIndex);
   ui.setSelectValue(randomMuteCountInBarsSelect, state.randomMuteCountInBarsIndex);
   ui.setSelectValue(accentBarsSelect, state.accentBarsIndex);
+
+  let themePreference = readThemePreference();
+  applyThemePreference(themePreference);
+  updateThemeToggleLabel(themePreference);
+
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+  prefersDark.addEventListener("change", () => {
+    if (themePreference === "system") {
+      updateThemeToggleLabel(themePreference);
+    }
+  });
+
+  themeToggle.addEventListener("click", () => {
+    const next =
+      themePreference === "system"
+        ? "dark"
+        : themePreference === "dark"
+          ? "light"
+          : "system";
+    themePreference = next;
+    writeThemePreference(themePreference);
+    applyThemePreference(themePreference);
+    updateThemeToggleLabel(themePreference);
+  });
 
   const unlockAudio = () => {
     void audio.resume();
