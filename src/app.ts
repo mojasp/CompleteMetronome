@@ -456,13 +456,7 @@ function rampBarsFromSpeed(speed: number) {
 }
 
 function layoutGridColumns() {
-  const beatsPerBar = TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar;
-  const denominator = DENOMINATORS[state.timeSignatureDenominatorIndex];
-  const perBeat = SUBDIVISIONS[state.subdivisionIndex].perBeat;
-  const isCompound = denominator === 8 && beatsPerBar % 3 === 0;
-  const groupSize = isCompound ? 3 : beatsPerBar;
-  const columns = Math.max(1, groupSize * perBeat);
-  subdivisionGrid.style.setProperty("--grid-columns", String(columns));
+  subdivisionGrid.style.setProperty("--grid-columns", String(totalSubdivisions()));
 }
 
 function readThemePreference(): ThemePreference {
