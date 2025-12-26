@@ -709,6 +709,10 @@ select {
   gap: 6px;
 }
 
+.accent-controls.is-open .accent-disclosure {
+  display: none;
+}
+
 .accent-disclosure {
   border: 1px solid var(--border);
   border-radius: 10px;

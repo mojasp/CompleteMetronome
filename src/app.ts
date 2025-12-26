@@ -40,6 +40,7 @@ const accentBarsSelect = getElement<HTMLSelectElement>("accent-bars");
 const accentWheelField = getElement<HTMLDivElement>("accent-wheel-field");
 const accentBarsTrigger = getElement<HTMLButtonElement>("accent-bars-trigger");
 const accentBarsPicker = getElement<HTMLDivElement>("accent-bars-picker");
+const accentControls = getElement<HTMLDivElement>("accent-controls");
 const accentHost = getElement<HTMLDivElement>("accent-host");
 const accentBlock = getElement<HTMLDivElement>("accent-block");
 const selectors = getElement<HTMLDivElement>("selectors");
@@ -846,6 +847,7 @@ function bindClickOutsideClose(
 function closeAccentPanel() {
   accentPanel.classList.remove("is-open");
   accentDisclosure.setAttribute("aria-expanded", "false");
+  accentControls.classList.remove("is-open");
   accentWheelPicker?.close();
 }
 
@@ -853,6 +855,7 @@ function openAccentPanel() {
   wheelPickers.forEach((picker) => picker.close());
   accentPanel.classList.add("is-open");
   accentDisclosure.setAttribute("aria-expanded", "true");
+  accentControls.classList.add("is-open");
   accentWheelPicker?.open();
 }
 
@@ -1189,7 +1192,7 @@ function setupControls() {
   });
 
   bindClickOutsideClose(accentPanel, accentDisclosure, () => {
-    accentWheelPicker?.close();
+    closeAccentPanel();
   });
   bindClickOutsideClose(trainerPanel, trainerDisclosure);
   bindClickOutsideClose(randomMutePanel, randomMuteDisclosure);
