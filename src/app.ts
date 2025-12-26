@@ -318,6 +318,7 @@ function createWheelPicker({
   let spacerTop: HTMLDivElement | null = null;
   let spacerBottom: HTMLDivElement | null = null;
   let isOpen = false;
+  let suppressScroll = false;
 
   const scrollToIndex = (index: number) => {
     const item = items[index];
@@ -392,11 +393,67 @@ function createWheelPicker({
     if (!Number.isFinite(index)) {
       return;
     }
+    suppressScroll = true;
     setIndex(index);
     close();
   });
 
+  let touchStartY = 0;
+  let touchMoved = false;
+  let touchTarget: HTMLButtonElement | null = null;
+
+  picker.addEventListener(
+    "touchstart",
+    (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) {
+        return;
+      }
+      touchStartY = touch.clientY;
+      touchMoved = false;
+      const target = event.target;
+      touchTarget = target instanceof HTMLButtonElement ? target : null;
+    },
+    { passive: true },
+  );
+
+  picker.addEventListener(
+    "touchmove",
+    (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) {
+        return;
+      }
+      if (Math.abs(touch.clientY - touchStartY) > 6) {
+        touchMoved = true;
+        touchTarget = null;
+      }
+    },
+    { passive: true },
+  );
+
+  picker.addEventListener(
+    "touchend",
+    () => {
+      if (touchMoved || !touchTarget) {
+        return;
+      }
+      const index = Number(touchTarget.dataset.index);
+      if (!Number.isFinite(index)) {
+        return;
+      }
+      suppressScroll = true;
+      setIndex(index);
+      close();
+    },
+    { passive: true },
+  );
+
   picker.addEventListener("scroll", () => {
+    if (suppressScroll) {
+      suppressScroll = false;
+      return;
+    }
     isScrolling = true;
     if (scrollTimeout) {
       clearTimeout(scrollTimeout);
