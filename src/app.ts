@@ -73,6 +73,11 @@ const SUBDIVISIONS: Subdivision[] = [
 
 const SOUND_PROFILES: SoundProfileOption[] = [
   {
+    label: "Click",
+    accent: { type: "square", frequency: 2100, volume: 0.22, decay: 0.025, duration: 0.04 },
+    regular: { type: "square", frequency: 2000, volume: 0.2, decay: 0.025, duration: 0.04 },
+  },
+  {
     label: "Bright",
     accent: { type: "square", frequency: 1400, volume: 0.22, decay: 0.04, duration: 0.05 },
     regular: { type: "square", frequency: 900, volume: 0.16, decay: 0.04, duration: 0.05 },
@@ -107,7 +112,7 @@ const VOLUME_MIN = 0;
 const VOLUME_MAX = 1000;
 const VOLUME_DEFAULT = 500;
 const VOLUME_MIDPOINT = 500;
-const VOLUME_MAX_GAIN = 10;
+const VOLUME_MAX_GAIN = 30;
 const THEME_PREFERENCE_KEY = "theme-preference";
 
 type MetronomeState = {
@@ -147,7 +152,7 @@ const state: MetronomeState = {
   timeSignatureNumeratorIndex: NUMERATORS.indexOf(4),
   timeSignatureDenominatorIndex: DENOMINATORS.indexOf(4),
   subdivisionIndex: 0,
-  soundProfileIndex: 1,
+  soundProfileIndex: 0,
   activeIndex: -1,
   soundStates: [],
   volumeControl: VOLUME_DEFAULT,
