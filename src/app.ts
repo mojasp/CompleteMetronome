@@ -196,7 +196,6 @@ function totalSubdivisions() {
 
 function initSoundStates() {
   const total = totalSubdivisions();
-  const perBeat = SUBDIVISIONS[state.subdivisionIndex].perBeat;
   const nextStates: SoundState[] = [];
   for (let i = 0; i < total; i += 1) {
     nextStates.push("B");
@@ -514,6 +513,23 @@ function syncAccentPlacement() {
   }
 }
 
+function bindClickOutsideClose(panel: HTMLElement, disclosure: HTMLElement) {
+  document.addEventListener("click", (event: MouseEvent) => {
+    if (!panel.classList.contains("is-open")) {
+      return;
+    }
+    const target = event.target as Node | null;
+    if (!target) {
+      return;
+    }
+    if (panel.contains(target) || disclosure.contains(target)) {
+      return;
+    }
+    panel.classList.remove("is-open");
+    disclosure.setAttribute("aria-expanded", "false");
+  });
+}
+
 function attachWheelControls() {
   if (!window.matchMedia("(max-width: 720px)").matches) {
     return;
@@ -745,50 +761,9 @@ function setupControls() {
     render();
   });
 
-  document.addEventListener("click", (event: MouseEvent) => {
-    if (!accentPanel.classList.contains("is-open")) {
-      return;
-    }
-    const target = event.target as Node | null;
-    if (!target) {
-      return;
-    }
-    if (accentPanel.contains(target) || accentDisclosure.contains(target)) {
-      return;
-    }
-    accentPanel.classList.remove("is-open");
-    accentDisclosure.setAttribute("aria-expanded", "false");
-  });
-
-  document.addEventListener("click", (event: MouseEvent) => {
-    if (!trainerPanel.classList.contains("is-open")) {
-      return;
-    }
-    const target = event.target as Node | null;
-    if (!target) {
-      return;
-    }
-    if (trainerPanel.contains(target) || trainerDisclosure.contains(target)) {
-      return;
-    }
-    trainerPanel.classList.remove("is-open");
-    trainerDisclosure.setAttribute("aria-expanded", "false");
-  });
-
-  document.addEventListener("click", (event: MouseEvent) => {
-    if (!randomMutePanel.classList.contains("is-open")) {
-      return;
-    }
-    const target = event.target as Node | null;
-    if (!target) {
-      return;
-    }
-    if (randomMutePanel.contains(target) || randomMuteDisclosure.contains(target)) {
-      return;
-    }
-    randomMutePanel.classList.remove("is-open");
-    randomMuteDisclosure.setAttribute("aria-expanded", "false");
-  });
+  bindClickOutsideClose(accentPanel, accentDisclosure);
+  bindClickOutsideClose(trainerPanel, trainerDisclosure);
+  bindClickOutsideClose(randomMutePanel, randomMuteDisclosure);
 
   timeSignatureNumeratorSelect.addEventListener("change", (event: Event) => {
     const target = event.target as HTMLSelectElement | null;
