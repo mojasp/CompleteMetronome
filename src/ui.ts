@@ -9,6 +9,7 @@ type UIElements = {
   togglePlay: HTMLButtonElement;
   subdivisionSelect: HTMLSelectElement;
   subdivisionGrid: HTMLDivElement;
+  beatGrid: HTMLDivElement;
 };
 
 type SelectOption = { label: string };
@@ -27,8 +28,10 @@ export function createUI({
   togglePlay,
   subdivisionSelect,
   subdivisionGrid,
+  beatGrid,
 }: UIElements) {
   let subdivisionCells: HTMLButtonElement[] = [];
+  let beatCells: HTMLDivElement[] = [];
   let lastActiveIndex = -1;
 
   function setPlayState(isPlaying: boolean) {
@@ -94,6 +97,27 @@ export function createUI({
     lastActiveIndex = activeIndex;
   }
 
+  function renderBeatGrid({ totalBeats, activeIndex }: { totalBeats: number; activeIndex: number }) {
+    if (beatCells.length !== totalBeats) {
+      beatGrid.innerHTML = "";
+      beatCells = [];
+      for (let i = 0; i < totalBeats; i += 1) {
+        const cell = document.createElement("div");
+        cell.className = "beat-cell";
+        beatGrid.appendChild(cell);
+        beatCells.push(cell);
+      }
+    }
+
+    beatCells.forEach((cell, i) => {
+      cell.classList.toggle("is-active", i === activeIndex);
+    });
+  }
+
+  function setBeatGridVisible(visible: boolean) {
+    beatGrid.classList.toggle("is-hidden", !visible);
+  }
+
   function nextSoundState(current: SoundState) {
     const idx = SOUND_STATES.indexOf(current);
     return SOUND_STATES[(idx + 1) % SOUND_STATES.length];
@@ -114,13 +138,25 @@ export function createUI({
     lastActiveIndex = activeIndex;
   }
 
+  function setActiveBeat(activeIndex: number) {
+    if (!beatCells.length) {
+      return;
+    }
+    beatCells.forEach((cell, i) => {
+      cell.classList.toggle("is-active", i === activeIndex);
+    });
+  }
+
   return {
     setPlayState,
     setTempoDisplay,
     populateSelect,
     setSelectValue,
     renderSubdivisionGrid,
+    renderBeatGrid,
+    setBeatGridVisible,
     nextSoundState,
     setActiveSubdivision,
+    setActiveBeat,
   };
 }

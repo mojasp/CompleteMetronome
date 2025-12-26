@@ -70,6 +70,7 @@ const numeratorTrigger = getElement<HTMLButtonElement>("numerator-trigger");
 const denominatorTrigger = getElement<HTMLButtonElement>("denominator-trigger");
 const subdivisionTrigger = getElement<HTMLButtonElement>("subdivision-trigger");
 const subdivisionGrid = getElement<HTMLDivElement>("subdivision-grid");
+const beatGrid = getElement<HTMLDivElement>("beat-grid");
 
 type TimeSignature = {
   label: string;
@@ -247,6 +248,7 @@ const ui = createUI({
   togglePlay,
   subdivisionSelect,
   subdivisionGrid,
+  beatGrid,
 });
 
 const audio = createMetronomeAudio();
@@ -326,9 +328,19 @@ function render() {
   accentDisclosure.classList.toggle("is-disabled", !state.accentEnabled);
   updateWheelDisplay();
   layoutGridColumns();
+  layoutBeatGridColumns();
+  const subdivisionsPerBeat = SUBDIVISIONS[state.subdivisionIndex].perBeat;
+  const beatsPerBar = TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar;
+  const activeBeatIndex =
+    state.activeIndex >= 0 ? Math.floor(state.activeIndex / subdivisionsPerBeat) : -1;
+  ui.setBeatGridVisible(subdivisionsPerBeat > 1);
+  ui.renderBeatGrid({
+    totalBeats: beatsPerBar,
+    activeIndex: activeBeatIndex,
+  });
   ui.renderSubdivisionGrid({
     totalSubdivisions: totalSubdivisions(),
-    subdivisionsPerBeat: SUBDIVISIONS[state.subdivisionIndex].perBeat,
+    subdivisionsPerBeat,
     soundStates: state.soundStates,
     activeIndex: state.activeIndex,
   });
@@ -340,6 +352,7 @@ function setTimeSignatureNumeratorIndex(nextIndex: number, syncPicker = true) {
   ui.setSelectValue(timeSignatureNumeratorSelect, clamped);
   initSoundStates();
   updateAudioSettings();
+  restartPlaybackIfNeeded();
   if (syncPicker) {
     wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
   }
@@ -357,6 +370,7 @@ function setTimeSignatureDenominatorIndex(nextIndex: number, syncPicker = true) 
   subdivisionWheelPicker?.setOptions(SUBDIVISIONS);
   initSoundStates();
   updateAudioSettings();
+  restartPlaybackIfNeeded();
   if (syncPicker) {
     wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
   }
@@ -369,6 +383,7 @@ function setSubdivisionIndex(nextIndex: number, syncPicker = true) {
   ui.setSelectValue(subdivisionSelect, clamped);
   initSoundStates();
   updateAudioSettings();
+  restartPlaybackIfNeeded();
   if (syncPicker) {
     wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
   }
@@ -818,6 +833,8 @@ async function startPlayback() {
     onTick: (tickIndex: number) => {
       state.activeIndex = tickIndex;
       ui.setActiveSubdivision(tickIndex);
+      const beatIndex = Math.floor(tickIndex / subdivision.perBeat);
+      ui.setActiveBeat(beatIndex);
       if (tickIndex === 0) {
         if (state.trainerEnabled) {
           if (state.trainerMode === "bars") {
@@ -930,6 +947,30 @@ function rampBarsFromSpeed(speed: number) {
 
 function layoutGridColumns() {
   subdivisionGrid.style.setProperty("--grid-columns", String(totalSubdivisions()));
+}
+
+function layoutBeatGridColumns() {
+  const beatsPerBar = TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar;
+  beatGrid.style.setProperty("--beat-grid-columns", String(beatsPerBar));
+}
+
+function restartPlaybackIfNeeded() {
+  if (!state.isPlaying) {
+    return;
+  }
+  void (async () => {
+    audio.stop();
+    stopTrainerInterval();
+    state.activeIndex = -1;
+    state.barCount = 0;
+    try {
+      await startPlayback();
+    } catch (error) {
+      console.warn("Failed to restart audio playback.", error);
+      state.isPlaying = false;
+    }
+    render();
+  })();
 }
 
 function readThemePreference(): ThemePreference {
