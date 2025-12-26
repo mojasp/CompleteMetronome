@@ -232,6 +232,42 @@ h1 {
   font-family: var(--font-display);
 }
 
+.tempo-wheel-row {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.tempo-stepper {
+  position: absolute;
+  left: -38px;
+  top: 50%;
+  height: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transform: translateY(-50%);
+}
+
+.tempo-step {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid var(--border-muted);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1;
+  font-family: var(--font-display);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tempo-step:active {
+  transform: translateY(1px);
+}
+
 .tempo-value {
   font-size: 2.6rem;
   font-weight: 600;
@@ -1166,7 +1202,12 @@ select {
     width: 190px;
     height: 190px;
     justify-self: start;
-    margin-left: 55px;
+    margin-left: 0;
+  }
+
+  .tempo-wheel-row {
+    display: flex;
+    margin-left: -23px;
   }
 
   .tempo-hint--desktop {

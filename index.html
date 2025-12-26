@@ -19,17 +19,36 @@
           </button>
         </div>
         <div class="tempo-block" id="tempo-block" aria-label="Tempo control">
-          <div class="tempo-display" id="tempo-display">
-            <div class="tempo-value" id="tempo-value">120</div>
-            <input
-              class="tempo-input"
-              id="tempo-input"
-              type="number"
-              inputmode="numeric"
-              min="20"
-              max="300"
-              aria-label="Tempo value"
-            />
+        <div class="tempo-display" id="tempo-display">
+          <div class="tempo-value" id="tempo-value">120</div>
+          <input
+            class="tempo-input"
+            id="tempo-input"
+            type="number"
+            inputmode="numeric"
+            min="20"
+            max="300"
+            aria-label="Tempo value"
+          />
+        </div>
+        <div class="tempo-wheel-row">
+          <div class="tempo-stepper">
+            <button
+              class="tempo-step"
+              id="tempo-step-plus"
+              type="button"
+              aria-label="Increase tempo"
+            >
+              +
+            </button>
+            <button
+              class="tempo-step"
+              id="tempo-step-minus"
+              type="button"
+              aria-label="Decrease tempo"
+            >
+              -
+            </button>
           </div>
           <div
             class="tempo-wheel"
@@ -46,7 +65,8 @@
               <div class="wheel-unit">BPM</div>
             </div>
           </div>
-          <p class="tempo-hint tempo-hint--desktop">Drag, scroll or click to adjust tempo.</p>
+        </div>
+        <p class="tempo-hint tempo-hint--desktop">Drag, scroll or click to adjust tempo.</p>
         </div>
 
         <div class="transport transport-main">

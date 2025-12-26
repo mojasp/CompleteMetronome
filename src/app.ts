@@ -16,6 +16,8 @@ const tempoWheelValue = getElement<HTMLElement>("tempo-wheel-value");
 const tempoBlock = getElement<HTMLDivElement>("tempo-block");
 const tempoDisplay = getElement<HTMLDivElement>("tempo-display");
 const tempoWheel = getElement<HTMLDivElement>("tempo-wheel");
+const tempoStepMinus = getElement<HTMLButtonElement>("tempo-step-minus");
+const tempoStepPlus = getElement<HTMLButtonElement>("tempo-step-plus");
 const soundProfileSelect = getElement<HTMLSelectElement>("sound-profile");
 const soundProfilePicker = getElement<HTMLDivElement>("sound-profile-picker");
 const soundProfileTrigger = getElement<HTMLButtonElement>("sound-profile-trigger");
@@ -1467,6 +1469,8 @@ function setupControls() {
     event.preventDefault();
     adjustTempo(event.deltaY > 0 ? -1 : 1);
   });
+  tempoStepMinus.addEventListener("click", () => adjustTempo(-1));
+  tempoStepPlus.addEventListener("click", () => adjustTempo(1));
 
   attachWheelControls();
   syncAccentPlacement();
