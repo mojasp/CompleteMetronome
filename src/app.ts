@@ -27,6 +27,14 @@ const trainerBarsSelect = getElement<HTMLSelectElement>("trainer-bars");
 const trainerBpmSelect = getElement<HTMLSelectElement>("trainer-bpm");
 const trainerSecondsSelect = getElement<HTMLSelectElement>("trainer-seconds");
 const trainerSecondsBpmSelect = getElement<HTMLSelectElement>("trainer-seconds-bpm");
+const trainerBarsTrigger = getElement<HTMLButtonElement>("trainer-bars-trigger");
+const trainerBarsPicker = getElement<HTMLDivElement>("trainer-bars-picker");
+const trainerBpmTrigger = getElement<HTMLButtonElement>("trainer-bpm-trigger");
+const trainerBpmPicker = getElement<HTMLDivElement>("trainer-bpm-picker");
+const trainerSecondsTrigger = getElement<HTMLButtonElement>("trainer-seconds-trigger");
+const trainerSecondsPicker = getElement<HTMLDivElement>("trainer-seconds-picker");
+const trainerSecondsBpmTrigger = getElement<HTMLButtonElement>("trainer-seconds-bpm-trigger");
+const trainerSecondsBpmPicker = getElement<HTMLDivElement>("trainer-seconds-bpm-picker");
 const randomMuteDisclosure = getElement<HTMLButtonElement>("random-mute-disclosure");
 const randomMutePanel = getElement<HTMLDivElement>("random-mute-panel");
 const randomMutePercentSelect = getElement<HTMLSelectElement>("random-mute-percent");
@@ -301,6 +309,58 @@ function setSubdivisionIndex(nextIndex: number, syncPicker = true) {
   ui.setSelectValue(subdivisionSelect, clamped);
   initSoundStates();
   updateAudioSettings();
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function setTrainerBarsIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(TRAINER_BARS.length - 1, nextIndex));
+  state.trainerBarsIndex = clamped;
+  state.trainerMode = "bars";
+  state.trainerConfigured = true;
+  ui.setSelectValue(trainerBarsSelect, clamped);
+  stopTrainerInterval();
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function setTrainerBpmIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(TRAINER_BPM_STEPS.length - 1, nextIndex));
+  state.trainerBpmIndex = clamped;
+  state.trainerMode = "bars";
+  state.trainerConfigured = true;
+  ui.setSelectValue(trainerBpmSelect, clamped);
+  stopTrainerInterval();
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function setTrainerSecondsIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(TRAINER_SECONDS.length - 1, nextIndex));
+  state.trainerSecondsIndex = clamped;
+  state.trainerMode = "seconds";
+  state.trainerConfigured = true;
+  ui.setSelectValue(trainerSecondsSelect, clamped);
+  startTrainerInterval();
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function setTrainerSecondsBpmIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(TRAINER_BPM_STEPS.length - 1, nextIndex));
+  state.trainerSecondsBpmIndex = clamped;
+  state.trainerMode = "seconds";
+  state.trainerConfigured = true;
+  ui.setSelectValue(trainerSecondsBpmSelect, clamped);
+  startTrainerInterval();
   if (syncPicker) {
     wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
   }
@@ -1040,6 +1100,38 @@ function setupControls() {
       getIndex: () => state.soundProfileIndex,
       setIndex: setSoundProfile,
     }),
+    createWheelPicker({
+      field: trainerBpmSelect.parentElement as HTMLDivElement,
+      trigger: trainerBpmTrigger,
+      picker: trainerBpmPicker,
+      options: TRAINER_BPM_STEPS.map((value) => ({ label: String(value) })),
+      getIndex: () => state.trainerBpmIndex,
+      setIndex: setTrainerBpmIndex,
+    }),
+    createWheelPicker({
+      field: trainerBarsSelect.parentElement as HTMLDivElement,
+      trigger: trainerBarsTrigger,
+      picker: trainerBarsPicker,
+      options: TRAINER_BARS.map((value) => ({ label: String(value) })),
+      getIndex: () => state.trainerBarsIndex,
+      setIndex: setTrainerBarsIndex,
+    }),
+    createWheelPicker({
+      field: trainerSecondsBpmSelect.parentElement as HTMLDivElement,
+      trigger: trainerSecondsBpmTrigger,
+      picker: trainerSecondsBpmPicker,
+      options: TRAINER_BPM_STEPS.map((value) => ({ label: String(value) })),
+      getIndex: () => state.trainerSecondsBpmIndex,
+      setIndex: setTrainerSecondsBpmIndex,
+    }),
+    createWheelPicker({
+      field: trainerSecondsSelect.parentElement as HTMLDivElement,
+      trigger: trainerSecondsTrigger,
+      picker: trainerSecondsPicker,
+      options: TRAINER_SECONDS.map((value) => ({ label: String(value) })),
+      getIndex: () => state.trainerSecondsIndex,
+      setIndex: setTrainerSecondsIndex,
+    }),
   ];
 
   accentWheelPicker = createWheelPicker({
@@ -1234,11 +1326,7 @@ function setupControls() {
     if (!target) {
       return;
     }
-    state.trainerBarsIndex = Number(target.value);
-    state.trainerMode = "bars";
-    state.trainerConfigured = true;
-    stopTrainerInterval();
-    render();
+    setTrainerBarsIndex(Number(target.value));
   });
 
   trainerBpmSelect.addEventListener("change", (event: Event) => {
@@ -1246,11 +1334,7 @@ function setupControls() {
     if (!target) {
       return;
     }
-    state.trainerBpmIndex = Number(target.value);
-    state.trainerMode = "bars";
-    state.trainerConfigured = true;
-    stopTrainerInterval();
-    render();
+    setTrainerBpmIndex(Number(target.value));
   });
 
   trainerSecondsSelect.addEventListener("change", (event: Event) => {
@@ -1258,11 +1342,7 @@ function setupControls() {
     if (!target) {
       return;
     }
-    state.trainerSecondsIndex = Number(target.value);
-    state.trainerMode = "seconds";
-    state.trainerConfigured = true;
-    startTrainerInterval();
-    render();
+    setTrainerSecondsIndex(Number(target.value));
   });
 
   trainerSecondsBpmSelect.addEventListener("change", (event: Event) => {
@@ -1270,11 +1350,7 @@ function setupControls() {
     if (!target) {
       return;
     }
-    state.trainerSecondsBpmIndex = Number(target.value);
-    state.trainerMode = "seconds";
-    state.trainerConfigured = true;
-    startTrainerInterval();
-    render();
+    setTrainerSecondsBpmIndex(Number(target.value));
   });
 
   randomMutePercentSelect.addEventListener("change", (event: Event) => {

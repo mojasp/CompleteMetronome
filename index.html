@@ -63,18 +63,81 @@
             </button>
             <div class="trainer-panel" id="trainer-panel">
               <div class="trainer-controls">
-                <div class="trainer-row">
+              <div class="trainer-row">
+                <div class="wheel-field">
+                  <button
+                    class="wheel-trigger"
+                    id="trainer-bpm-trigger"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                  ></button>
                   <select id="trainer-bpm" aria-label="Trainer tempo increment"></select>
-                  <span class="trainer-separator" aria-hidden="true">BPM</span>
+                  <div
+                    class="wheel-picker"
+                    id="trainer-bpm-picker"
+                    role="listbox"
+                    aria-label="Trainer BPM increment"
+                  ></div>
+                </div>
+                <span class="trainer-separator" aria-hidden="true">BPM</span>
+                <div class="wheel-field">
+                  <button
+                    class="wheel-trigger"
+                    id="trainer-bars-trigger"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                  ></button>
                   <select id="trainer-bars" aria-label="Trainer bars interval"></select>
-                  <span class="trainer-separator" aria-hidden="true">bars</span>
+                  <div
+                    class="wheel-picker"
+                    id="trainer-bars-picker"
+                    role="listbox"
+                    aria-label="Trainer bars interval"
+                  ></div>
                 </div>
-                <div class="trainer-row">
-                  <select id="trainer-seconds-bpm" aria-label="Trainer tempo increment per seconds"></select>
-                  <span class="trainer-separator" aria-hidden="true">BPM</span>
+                <span class="trainer-separator" aria-hidden="true">bars</span>
+              </div>
+              <div class="trainer-row">
+                <div class="wheel-field">
+                  <button
+                    class="wheel-trigger"
+                    id="trainer-seconds-bpm-trigger"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                  ></button>
+                  <select
+                    id="trainer-seconds-bpm"
+                    aria-label="Trainer tempo increment per seconds"
+                  ></select>
+                  <div
+                    class="wheel-picker"
+                    id="trainer-seconds-bpm-picker"
+                    role="listbox"
+                    aria-label="Trainer BPM increment seconds"
+                  ></div>
+                </div>
+                <span class="trainer-separator" aria-hidden="true">BPM</span>
+                <div class="wheel-field">
+                  <button
+                    class="wheel-trigger"
+                    id="trainer-seconds-trigger"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                  ></button>
                   <select id="trainer-seconds" aria-label="Trainer seconds interval"></select>
-                  <span class="trainer-separator" aria-hidden="true">seconds</span>
+                  <div
+                    class="wheel-picker"
+                    id="trainer-seconds-picker"
+                    role="listbox"
+                    aria-label="Trainer seconds interval"
+                  ></div>
                 </div>
+                <span class="trainer-separator" aria-hidden="true">secs</span>
+              </div>
               </div>
             </div>
           </div>

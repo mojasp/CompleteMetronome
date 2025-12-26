@@ -332,12 +332,13 @@ h1 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
+  margin-top: -8px;
 }
 
 .tool-group {
   display: grid;
-  gap: 8px;
-  justify-items: start;
+  gap: 4px;
+  justify-items: center;
 }
 
 .transport-button {
@@ -637,7 +638,7 @@ h1 {
 
 .trainer-controls {
   display: grid;
-  gap: 10px;
+  gap: 4px;
 }
 
 .trainer-row {
@@ -647,9 +648,27 @@ h1 {
   gap: 8px;
 }
 
+.trainer-row .wheel-field {
+  min-width: 44px;
+}
+
+.trainer-controls .wheel-trigger {
+  padding: 6px 8px;
+  font-size: 0.78rem;
+}
+
+.trainer-controls .wheel-picker {
+  height: 80px;
+}
+
+.trainer-controls .wheel-picker-item {
+  height: 20px;
+  font-size: 0.78rem;
+}
+
 .random-mute-controls {
   display: grid;
-  gap: 8px;
+  gap: 4px;
 }
 
 .random-mute-row {
