@@ -27,9 +27,14 @@ developer, and my previous metronome app introduced pop-up ads. This one
 does not have them.
 
 
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0.
+See the LICENSE file for details.
+
 ## Development
 
-Requires bun; you can use npm but Install dependencies:
+I used bun, but do whatever you like. To install:
 
 ```sh
 bun install
