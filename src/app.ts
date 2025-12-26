@@ -144,6 +144,25 @@ const SOUND_PROFILES: SoundProfileOption[] = [
     regular: { type: "square", frequency: 2000, volume: 0.2, decay: 0.025, duration: 0.04 },
   },
   {
+    label: "Loud",
+    accent: {
+      type: "square",
+      frequency: 2600,
+      volume: 0.26,
+      decay: 0.03,
+      duration: 0.05,
+      preset: "loud",
+    },
+    regular: {
+      type: "square",
+      frequency: 2200,
+      volume: 0.22,
+      decay: 0.03,
+      duration: 0.05,
+      preset: "loud",
+    },
+  },
+  {
     label: "Bright",
     accent: { type: "square", frequency: 1400, volume: 0.22, decay: 0.04, duration: 0.05 },
     regular: { type: "square", frequency: 900, volume: 0.16, decay: 0.04, duration: 0.05 },

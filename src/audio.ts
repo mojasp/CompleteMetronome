@@ -1,4 +1,4 @@
-import type { SoundProfile, SoundState } from "./types.js";
+import type { SoundProfile, SoundProfileTone, SoundState } from "./types.js";
 
 const DEFAULT_LOOKAHEAD_MS = 25;
 const DEFAULT_SCHEDULE_AHEAD = 0.1;
@@ -9,10 +9,100 @@ const COMPRESSOR_RATIO = 12;
 const COMPRESSOR_KNEE = 12;
 const COMPRESSOR_ATTACK = 0.003;
 const COMPRESSOR_RELEASE = 0.18;
+const LOUD_CLICK_DRIVE = 2.6;
+const LOUD_CLICK_PRESENCE_DB = 6;
+const LOUD_CLICK_HIGHPASS = 650;
+const LOUD_CLICK_PRESENCE_HZ = 3200;
 const DEFAULT_SOUND_PROFILE: SoundProfile = {
-  accent: { type: "triangle", frequency: 1200, volume: 0.18, decay: 0.05, duration: 0.06 },
-  regular: { type: "triangle", frequency: 760, volume: 0.13, decay: 0.05, duration: 0.06 },
+  accent: { type: "triangle", frequency: 1200, volume: 0.18, decay: 0.055, duration: 0.07 },
+  regular: { type: "triangle", frequency: 760, volume: 0.13, decay: 0.055, duration: 0.07 },
 };
+
+let loudClickCurve: Float32Array | null = null;
+
+function getLoudClickCurve() {
+  if (loudClickCurve) {
+    return loudClickCurve;
+  }
+  const samples = 1024;
+  const curve = new Float32Array(samples);
+  const amount = 2.2;
+  for (let i = 0; i < samples; i += 1) {
+    const x = (i * 2) / (samples - 1) - 1;
+    curve[i] = Math.tanh(amount * x);
+  }
+  loudClickCurve = curve;
+  return curve;
+}
+
+function createLoudClick(
+  audioCtx: AudioContext,
+  time: number,
+  tone: SoundProfileTone,
+  outputNode: AudioNode,
+  noiseBuffer: AudioBuffer,
+) {
+  const decay = tone.decay ?? 0.03;
+  const duration = tone.duration ?? 0.05;
+  const baseFrequency = tone.frequency ?? 2400;
+  const baseGain = (tone.volume ?? 0.22) * CLICK_GAIN_MULTIPLIER;
+
+  const clickBus = audioCtx.createGain();
+  clickBus.gain.setValueAtTime(1, time);
+
+  const toneGain = audioCtx.createGain();
+  toneGain.gain.setValueAtTime(0.0001, time);
+  toneGain.gain.exponentialRampToValueAtTime(baseGain * 1.4, time + 0.0012);
+  toneGain.gain.exponentialRampToValueAtTime(0.0001, time + Math.max(0.018, decay));
+
+  const osc = audioCtx.createOscillator();
+  osc.type = tone.type ?? "square";
+  osc.frequency.setValueAtTime(baseFrequency * 1.2, time);
+  osc.frequency.exponentialRampToValueAtTime(baseFrequency, time + 0.018);
+  osc.connect(toneGain).connect(clickBus);
+  osc.start(time);
+  osc.stop(time + duration);
+
+  const noiseSource = audioCtx.createBufferSource();
+  noiseSource.buffer = noiseBuffer;
+
+  const snapFilter = audioCtx.createBiquadFilter();
+  snapFilter.type = "bandpass";
+  snapFilter.frequency.setValueAtTime(baseFrequency * 1.6, time);
+  snapFilter.Q.value = 0.9;
+
+  const snapHighpass = audioCtx.createBiquadFilter();
+  snapHighpass.type = "highpass";
+  snapHighpass.frequency.setValueAtTime(1400, time);
+
+  const snapGain = audioCtx.createGain();
+  snapGain.gain.setValueAtTime(0.0001, time);
+  snapGain.gain.exponentialRampToValueAtTime(baseGain * 1.15, time + 0.0006);
+  snapGain.gain.exponentialRampToValueAtTime(0.0001, time + Math.min(0.012, decay));
+
+  noiseSource.connect(snapFilter).connect(snapHighpass).connect(snapGain).connect(clickBus);
+  noiseSource.start(time);
+  noiseSource.stop(time + Math.min(0.02, duration));
+
+  const highpass = audioCtx.createBiquadFilter();
+  highpass.type = "highpass";
+  highpass.frequency.setValueAtTime(LOUD_CLICK_HIGHPASS, time);
+
+  const drive = audioCtx.createGain();
+  drive.gain.setValueAtTime(LOUD_CLICK_DRIVE, time);
+
+  const shaper = audioCtx.createWaveShaper();
+  shaper.curve = getLoudClickCurve();
+  shaper.oversample = "4x";
+
+  const presence = audioCtx.createBiquadFilter();
+  presence.type = "peaking";
+  presence.frequency.setValueAtTime(LOUD_CLICK_PRESENCE_HZ, time);
+  presence.Q.value = 0.8;
+  presence.gain.value = LOUD_CLICK_PRESENCE_DB;
+
+  clickBus.connect(highpass).connect(drive).connect(shaper).connect(presence).connect(outputNode);
+}
 
 function createClick(
   audioCtx: AudioContext,
@@ -20,6 +110,7 @@ function createClick(
   variant: SoundState,
   soundProfile: SoundProfile | undefined,
   outputNode: AudioNode,
+  noiseBuffer: AudioBuffer,
 ) {
   if (variant === "mute") {
     return;
@@ -27,22 +118,58 @@ function createClick(
 
   const profile = soundProfile || DEFAULT_SOUND_PROFILE;
   const tone = variant === "A" ? profile.accent : profile.regular;
+  if (tone.preset === "loud") {
+    createLoudClick(audioCtx, time, tone, outputNode, noiseBuffer);
+    return;
+  }
   const decay = tone.decay ?? 0.04;
   const duration = tone.duration ?? 0.05;
 
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
+  const baseFrequency = tone.frequency ?? 900;
+  const baseGain = (tone.volume ?? 0.16) * CLICK_GAIN_MULTIPLIER;
+  const bodyDecay = Math.max(decay, 0.03);
+  const bodyDuration = Math.max(duration, 0.05);
 
-  osc.type = tone.type ?? "square";
-  osc.frequency.value = tone.frequency ?? 900;
+  const bodyGain = audioCtx.createGain();
+  bodyGain.gain.setValueAtTime(0.0001, time);
+  bodyGain.gain.exponentialRampToValueAtTime(baseGain, time + 0.003);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, time + bodyDecay);
 
-  const baseGain = tone.volume ?? 0.16;
-  gain.gain.setValueAtTime(baseGain * CLICK_GAIN_MULTIPLIER, time);
-  gain.gain.exponentialRampToValueAtTime(0.0001, time + decay);
+  const oscPrimary = audioCtx.createOscillator();
+  oscPrimary.type = tone.type ?? "triangle";
+  oscPrimary.frequency.setValueAtTime(baseFrequency * 1.08, time);
+  oscPrimary.frequency.exponentialRampToValueAtTime(baseFrequency, time + 0.03);
 
-  osc.connect(gain).connect(outputNode);
-  osc.start(time);
-  osc.stop(time + duration);
+  const oscBody = audioCtx.createOscillator();
+  oscBody.type = "sine";
+  oscBody.frequency.setValueAtTime(baseFrequency * 0.5, time);
+  oscBody.frequency.exponentialRampToValueAtTime(baseFrequency * 0.45, time + 0.04);
+
+  oscPrimary.connect(bodyGain);
+  oscBody.connect(bodyGain);
+  bodyGain.connect(outputNode);
+
+  oscPrimary.start(time);
+  oscBody.start(time);
+  oscPrimary.stop(time + bodyDuration);
+  oscBody.stop(time + bodyDuration);
+
+  const noiseSource = audioCtx.createBufferSource();
+  noiseSource.buffer = noiseBuffer;
+
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.setValueAtTime(baseFrequency * 3.2, time);
+  noiseFilter.Q.value = 1.1;
+
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(0.0001, time);
+  noiseGain.gain.exponentialRampToValueAtTime(baseGain * 0.55, time + 0.001);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, time + Math.min(0.02, bodyDecay));
+
+  noiseSource.connect(noiseFilter).connect(noiseGain).connect(outputNode);
+  noiseSource.start(time);
+  noiseSource.stop(time + Math.min(0.03, bodyDuration));
 }
 
 type StartOptions = {
@@ -86,9 +213,24 @@ export function createMetronomeAudio(): MetronomeAudio {
   let outputNode: AudioNode | null = null;
   let masterGain: GainNode | null = null;
   let compressor: DynamicsCompressorNode | null = null;
+  let noiseBuffer: AudioBuffer | null = null;
   const AudioContextCtor =
     window.AudioContext ||
     (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+  function getNoiseBuffer(ctx: AudioContext) {
+    if (noiseBuffer && noiseBuffer.sampleRate === ctx.sampleRate) {
+      return noiseBuffer;
+    }
+    const length = Math.floor(ctx.sampleRate * 0.03);
+    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i += 1) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+    }
+    noiseBuffer = buffer;
+    return buffer;
+  }
 
   function applyVolume() {
     if (!masterGain) {
@@ -136,7 +278,7 @@ export function createMetronomeAudio(): MetronomeAudio {
     while (nextNoteTime < ctx.currentTime + DEFAULT_SCHEDULE_AHEAD) {
       const soundState = getSoundState(currentTick);
       if (outputNode) {
-        createClick(ctx, nextNoteTime, soundState, soundProfile, outputNode);
+        createClick(ctx, nextNoteTime, soundState, soundProfile, outputNode, getNoiseBuffer(ctx));
       }
       const tickToSend = currentTick;
       const tickTime = nextNoteTime;

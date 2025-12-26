@@ -6,6 +6,7 @@ export type SoundProfileTone = {
   volume?: number;
   decay?: number;
   duration?: number;
+  preset?: "loud";
 };
 
 export type SoundProfile = {
