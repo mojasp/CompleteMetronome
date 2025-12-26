@@ -224,7 +224,22 @@
               <div class="accent-panel" id="accent-panel">
                 <div class="accent-panel-inner">
                   <span class="accent-label">Every</span>
-                  <select id="accent-bars" aria-label="Accent every X bars"></select>
+                  <div class="wheel-field wheel-field--accent" id="accent-wheel-field">
+                    <button
+                      class="wheel-trigger"
+                      id="accent-bars-trigger"
+                      type="button"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                    ></button>
+                    <select id="accent-bars" aria-label="Accent every X bars"></select>
+                    <div
+                      class="wheel-picker"
+                      id="accent-bars-picker"
+                      role="listbox"
+                      aria-label="Accent bars"
+                    ></div>
+                  </div>
                   <span class="accent-label">bars</span>
                 </div>
               </div>

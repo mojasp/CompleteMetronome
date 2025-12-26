@@ -748,6 +748,24 @@ select {
   color: var(--ink-soft);
 }
 
+.accent-panel .wheel-field--accent {
+  min-width: 70px;
+}
+
+.accent-panel .wheel-field--accent select,
+.accent-panel .wheel-field--accent .wheel-trigger {
+  display: none;
+}
+
+.accent-panel .wheel-field--accent.is-open .wheel-picker {
+  display: block;
+  position: static;
+}
+
+.accent-panel .wheel-field--accent .wheel-picker {
+  height: 96px;
+}
+
 .accent-panel-inner select {
   padding: 6px 8px;
   border-radius: 10px;
