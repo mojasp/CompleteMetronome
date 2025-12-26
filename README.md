@@ -12,7 +12,7 @@ Features:
 * Subdivide the bar further if needed (8ths, triplets, etc.).
 * Loudness slider to increase the volume on mobile devices with a weak speaker.
 * Trainer: Increase tempo every x bars / seconds.
-* Random mute: randomly mute measures to train your internal pulse.
+* Random mute: randomly mute any subdivisions to train your internal pulse.
 * Accent every xth bar - This can help to check that you have not lost the form.
 
 No runtime dependencies except for capacitor for android builds; no backend.
