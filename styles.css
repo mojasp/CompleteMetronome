@@ -81,6 +81,14 @@ body {
   padding: 48px 24px 64px;
   position: relative;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+input,
+select,
+textarea {
+  user-select: text;
 }
 
 
