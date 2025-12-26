@@ -759,13 +759,18 @@ select {
   }
 
   .theme-toggle {
-    top: 14px;
-    right: 14px;
+    top: 4px;
+    right: 4px;
   }
 
   .controls {
     grid-template-columns: 1fr;
     justify-items: center;
+    grid-template-areas:
+      "tempo"
+      "grid"
+      "selectors"
+      "tools";
   }
 
   .tempo-block,
@@ -777,18 +782,27 @@ select {
 
   .tempo-block {
     order: 1;
+    width: 100%;
+    justify-items: center;
+    grid-area: tempo;
+    justify-self: start;
+    transform: translateX(-14px);
   }
 
   .transport-main {
-    order: 2;
+    grid-area: tempo;
+    align-self: end;
+    justify-self: end;
+    margin: 0 8px 8px 0;
+    transform: translateX(-14px);
   }
 
   .grid-panel {
-    order: 3;
+    grid-area: grid;
   }
 
   .selectors {
-    order: 4;
+    grid-area: selectors;
     grid-template-columns: repeat(2, minmax(140px, 1fr));
     gap: 12px;
   }
@@ -802,7 +816,7 @@ select {
   }
 
   .transport-tools {
-    order: 5;
+    grid-area: tools;
   }
 
   .tempo-display {
@@ -813,6 +827,8 @@ select {
     display: grid;
     width: 190px;
     height: 190px;
+    justify-self: start;
+    margin-left: 55px;
   }
 
   .tempo-hint--desktop {
