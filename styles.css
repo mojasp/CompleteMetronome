@@ -78,7 +78,7 @@ body {
   font-family: var(--font-body);
   display: grid;
   place-items: center;
-  padding: 48px 24px 64px;
+  padding: 32px 24px 56px;
   position: relative;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
@@ -214,7 +214,7 @@ h1 {
   letter-spacing: 0.15em;
   font-size: 0.7rem;
   color: var(--ink-soft);
-  margin: 0 0 8px;
+  margin: 0 0 1px;
   font-family: var(--font-display);
 }
 
@@ -325,7 +325,19 @@ h1 {
 
 .transport {
   display: grid;
-  gap: 12px;
+  gap: 8px;
+}
+
+.transport-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.tool-group {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
 }
 
 .transport-button {
@@ -448,7 +460,7 @@ h1 {
 
 .select-field {
   display: grid;
-  gap: 8px;
+  gap: 2px;
   font-family: var(--font-display);
   font-size: 0.9rem;
 }
@@ -831,7 +843,7 @@ select {
 
 @media (max-width: 720px) {
   body {
-    padding: 32px 16px 48px;
+    padding: 24px 16px 40px;
     place-items: start center;
   }
 
@@ -894,6 +906,10 @@ select {
 
   .transport-tools {
     grid-area: tools;
+  }
+
+  .tool-group {
+    justify-items: center;
   }
 
   .tempo-display {

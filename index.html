@@ -51,65 +51,69 @@
         </div>
 
         <div class="transport transport-tools">
-          <button
-            class="trainer-disclosure"
-            id="trainer-disclosure"
-            type="button"
-            aria-expanded="false"
-            aria-controls="trainer-panel"
-          >
-            Trainer
-          </button>
-          <div class="trainer-panel" id="trainer-panel">
-            <div class="trainer-controls">
-              <div class="trainer-row">
-                <select id="trainer-bpm" aria-label="Trainer tempo increment"></select>
-                <span class="trainer-separator" aria-hidden="true">BPM</span>
-                <select id="trainer-bars" aria-label="Trainer bars interval"></select>
-                <span class="trainer-separator" aria-hidden="true">bars</span>
-              </div>
-              <div class="trainer-row">
-                <select id="trainer-seconds-bpm" aria-label="Trainer tempo increment per seconds"></select>
-                <span class="trainer-separator" aria-hidden="true">BPM</span>
-                <select id="trainer-seconds" aria-label="Trainer seconds interval"></select>
-                <span class="trainer-separator" aria-hidden="true">seconds</span>
+          <div class="tool-group tool-group--trainer">
+            <button
+              class="trainer-disclosure"
+              id="trainer-disclosure"
+              type="button"
+              aria-expanded="false"
+              aria-controls="trainer-panel"
+            >
+              Trainer
+            </button>
+            <div class="trainer-panel" id="trainer-panel">
+              <div class="trainer-controls">
+                <div class="trainer-row">
+                  <select id="trainer-bpm" aria-label="Trainer tempo increment"></select>
+                  <span class="trainer-separator" aria-hidden="true">BPM</span>
+                  <select id="trainer-bars" aria-label="Trainer bars interval"></select>
+                  <span class="trainer-separator" aria-hidden="true">bars</span>
+                </div>
+                <div class="trainer-row">
+                  <select id="trainer-seconds-bpm" aria-label="Trainer tempo increment per seconds"></select>
+                  <span class="trainer-separator" aria-hidden="true">BPM</span>
+                  <select id="trainer-seconds" aria-label="Trainer seconds interval"></select>
+                  <span class="trainer-separator" aria-hidden="true">seconds</span>
+                </div>
               </div>
             </div>
           </div>
-          <button
-            class="random-mute-disclosure"
-            id="random-mute-disclosure"
-            type="button"
-            aria-expanded="false"
-            aria-controls="random-mute-panel"
-          >
-            Random mute
-          </button>
-          <div class="random-mute-panel" id="random-mute-panel">
-            <div class="random-mute-controls">
-              <div class="random-mute-row">
-                <select id="random-mute-percent" aria-label="Random mute percentage"></select>
-                <span class="trainer-separator" aria-hidden="true">%</span>
-              </div>
-              <label class="random-mute-option random-mute-option--slider">
-                <span>Ramp speed</span>
-                <input
-                  id="random-mute-ramp"
-                  type="range"
-                  min="1"
-                  max="100"
-                  step="1"
-                  value="100"
-                />
-                <span class="random-mute-ramp-value" id="random-mute-ramp-value">16 bars</span>
-              </label>
-              <label class="random-mute-option">
-                <input id="random-mute-countin" type="checkbox" />
-                Count-in
-              </label>
-              <div class="random-mute-row">
-                <select id="random-mute-countin-bars" aria-label="Random mute count-in bars"></select>
-                <span class="trainer-separator" aria-hidden="true">bars</span>
+          <div class="tool-group tool-group--random-mute">
+            <button
+              class="random-mute-disclosure"
+              id="random-mute-disclosure"
+              type="button"
+              aria-expanded="false"
+              aria-controls="random-mute-panel"
+            >
+              Random mute
+            </button>
+            <div class="random-mute-panel" id="random-mute-panel">
+              <div class="random-mute-controls">
+                <div class="random-mute-row">
+                  <select id="random-mute-percent" aria-label="Random mute percentage"></select>
+                  <span class="trainer-separator" aria-hidden="true">%</span>
+                </div>
+                <label class="random-mute-option random-mute-option--slider">
+                  <span>Ramp speed</span>
+                  <input
+                    id="random-mute-ramp"
+                    type="range"
+                    min="1"
+                    max="100"
+                    step="1"
+                    value="100"
+                  />
+                  <span class="random-mute-ramp-value" id="random-mute-ramp-value">16 bars</span>
+                </label>
+                <label class="random-mute-option">
+                  <input id="random-mute-countin" type="checkbox" />
+                  Count-in
+                </label>
+                <div class="random-mute-row">
+                  <select id="random-mute-countin-bars" aria-label="Random mute count-in bars"></select>
+                  <span class="trainer-separator" aria-hidden="true">bars</span>
+                </div>
               </div>
             </div>
           </div>
