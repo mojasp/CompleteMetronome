@@ -140,8 +140,28 @@ function updateSubdivisionsForDenominator(denominator: number) {
 const SOUND_PROFILES: SoundProfileOption[] = [
   {
     label: "Click",
-    accent: { type: "square", frequency: 2100, volume: 0.22, decay: 0.025, duration: 0.04 },
-    regular: { type: "square", frequency: 2000, volume: 0.2, decay: 0.025, duration: 0.04 },
+    accent: { type: "square", frequency: 2600, volume: 0.3, decay: 0.018, duration: 0.032 },
+    regular: { type: "square", frequency: 1700, volume: 0.2, decay: 0.025, duration: 0.04 },
+  },
+  {
+    label: "Wood",
+    accent: { type: "triangle", frequency: 1200, volume: 0.18, decay: 0.05, duration: 0.06 },
+    regular: { type: "triangle", frequency: 760, volume: 0.13, decay: 0.05, duration: 0.06 },
+  },
+  {
+    label: "Bright",
+    accent: { type: "square", frequency: 1400, volume: 0.22, decay: 0.04, duration: 0.05 },
+    regular: { type: "square", frequency: 900, volume: 0.16, decay: 0.04, duration: 0.05 },
+  },
+  {
+    label: "Soft",
+    accent: { type: "sine", frequency: 1100, volume: 0.2, decay: 0.08, duration: 0.09 },
+    regular: { type: "sine", frequency: 720, volume: 0.14, decay: 0.08, duration: 0.09 },
+  },
+  {
+    label: "Sharp",
+    accent: { type: "square", frequency: 1800, volume: 0.2, decay: 0.03, duration: 0.04 },
+    regular: { type: "square", frequency: 1200, volume: 0.13, decay: 0.03, duration: 0.04 },
   },
   {
     label: "Loud",
@@ -161,26 +181,6 @@ const SOUND_PROFILES: SoundProfileOption[] = [
       duration: 0.05,
       preset: "loud",
     },
-  },
-  {
-    label: "Bright",
-    accent: { type: "square", frequency: 1400, volume: 0.22, decay: 0.04, duration: 0.05 },
-    regular: { type: "square", frequency: 900, volume: 0.16, decay: 0.04, duration: 0.05 },
-  },
-  {
-    label: "Wood",
-    accent: { type: "triangle", frequency: 1200, volume: 0.18, decay: 0.05, duration: 0.06 },
-    regular: { type: "triangle", frequency: 760, volume: 0.13, decay: 0.05, duration: 0.06 },
-  },
-  {
-    label: "Soft",
-    accent: { type: "sine", frequency: 1100, volume: 0.2, decay: 0.08, duration: 0.09 },
-    regular: { type: "sine", frequency: 720, volume: 0.14, decay: 0.08, duration: 0.09 },
-  },
-  {
-    label: "Sharp",
-    accent: { type: "square", frequency: 1800, volume: 0.2, decay: 0.03, duration: 0.04 },
-    regular: { type: "square", frequency: 1200, volume: 0.13, decay: 0.03, duration: 0.04 },
   },
 ];
 
