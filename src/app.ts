@@ -17,6 +17,8 @@ const tempoBlock = getElement<HTMLDivElement>("tempo-block");
 const tempoDisplay = getElement<HTMLDivElement>("tempo-display");
 const tempoWheel = getElement<HTMLDivElement>("tempo-wheel");
 const soundProfileSelect = getElement<HTMLSelectElement>("sound-profile");
+const soundProfilePicker = getElement<HTMLDivElement>("sound-profile-picker");
+const soundProfileTrigger = getElement<HTMLButtonElement>("sound-profile-trigger");
 const volumeInput = getElement<HTMLInputElement>("volume");
 const togglePlay = getElement<HTMLButtonElement>("toggle-play");
 const trainerDisclosure = getElement<HTMLButtonElement>("trainer-disclosure");
@@ -981,6 +983,14 @@ function setupControls() {
       options: SUBDIVISIONS,
       getIndex: () => state.subdivisionIndex,
       setIndex: setSubdivisionIndex,
+    }),
+    createWheelPicker({
+      field: soundProfilePicker.parentElement as HTMLDivElement,
+      trigger: soundProfileTrigger,
+      picker: soundProfilePicker,
+      options: SOUND_PROFILES,
+      getIndex: () => state.soundProfileIndex,
+      setIndex: setSoundProfile,
     }),
   ];
   window.addEventListener("resize", () => {

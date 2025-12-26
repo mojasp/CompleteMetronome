@@ -180,7 +180,22 @@
 
           <label class="select-field select-field--sound">
             <span class="label">Sound</span>
-            <select id="sound-profile"></select>
+            <div class="wheel-field">
+              <button
+                class="wheel-trigger"
+                id="sound-profile-trigger"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              ></button>
+              <select id="sound-profile"></select>
+              <div
+                class="wheel-picker"
+                id="sound-profile-picker"
+                role="listbox"
+                aria-label="Sound profile"
+              ></div>
+            </div>
             <div class="volume-control">
               <input
                 id="volume"
