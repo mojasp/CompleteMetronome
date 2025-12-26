@@ -112,11 +112,11 @@ h1 {
 }
 
 .panel {
-  background: var(--panel);
-  backdrop-filter: blur(12px);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 24px;
+  background: transparent;
+  backdrop-filter: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
   position: relative;
 }
 
