@@ -438,6 +438,7 @@ h1 {
 
 .select-field--accent {
   grid-column: 2;
+  align-self: start;
 }
 
 
@@ -707,19 +708,22 @@ select {
   display: inline-grid;
   justify-items: end;
   gap: 6px;
+  position: relative;
+  align-self: start;
 }
 
 .accent-controls.is-open .accent-disclosure {
-  display: none;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .accent-disclosure {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
   color: var(--ink);
-  padding: 6px 10px;
-  font-size: 0.72rem;
+  padding: 10px 12px;
+  font-size: 0.85rem;
   font-family: var(--font-display);
   cursor: pointer;
 }
@@ -741,6 +745,10 @@ select {
 .accent-panel.is-open {
   display: grid;
   gap: 6px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
 }
 
 .accent-panel-inner {
