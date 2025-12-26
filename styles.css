@@ -431,6 +431,8 @@ h1 {
 
 .select-field--sound {
   grid-column: 1;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .select-field--accent {
@@ -453,11 +455,55 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .volume-control input[type="range"] {
   flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 32px;
+  background: transparent;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  padding: 0 4px;
+  box-shadow: none;
+}
+
+.volume-control input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  background:
+    linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent) 35%, transparent) 100%);
+  border-radius: 999px;
+}
+
+.volume-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid color-mix(in srgb, var(--accent-2) 35%, transparent);
+  box-shadow: none;
+  margin-top: -10px;
+}
+
+.volume-control input[type="range"]::-moz-range-track {
+  height: 3px;
+  background:
+    linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent) 35%, transparent) 100%);
+  border-radius: 999px;
+}
+
+.volume-control input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid color-mix(in srgb, var(--accent-2) 35%, transparent);
+  box-shadow: none;
+}
 }
 
 @media (max-width: 720px) {
@@ -807,9 +853,9 @@ select {
     gap: 12px;
   }
 
-  .select-field--sound {
-    grid-column: 1;
-  }
+.select-field--sound {
+  grid-column: 1;
+}
 
   .select-field--accent {
     grid-column: 2;
@@ -837,6 +883,11 @@ select {
 
   .tempo-hint--mobile {
     display: block;
+  }
+
+  .select-field--sound {
+    touch-action: none;
+    overscroll-behavior: contain;
   }
 
   .wheel-field select {
