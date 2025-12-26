@@ -437,6 +437,7 @@ h1 {
   grid-column: 2;
 }
 
+
 .accent-block.is-inline .label {
   display: none;
 }
@@ -457,6 +458,12 @@ h1 {
 
 .volume-control input[type="range"] {
   flex: 1;
+}
+
+@media (max-width: 720px) {
+  .select-field--accent .accent-controls {
+    align-items: start;
+  }
 }
 
 @media (min-width: 721px) {
