@@ -1,6 +1,6 @@
 # Complete Metronome
 
-Browser-based and feature-complete metronome. It is feature-complete in the sense that it has all the features that i want and imagine to be useful, nothing more.
+[Browser-based and feature-complete metronome](https://mojasp.github.io/CompleteMetronome/). It is feature-complete in the sense that it has all the features that i want and imagine to be useful, nothing more.
 The intended audience is mobile, very low care is given to
 provide an ergonomic desktop experience although it works - but the ui might
 not be nice.
