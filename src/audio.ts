@@ -104,6 +104,79 @@ function createLoudClick(
   clickBus.connect(highpass).connect(drive).connect(shaper).connect(presence).connect(outputNode);
 }
 
+function createStackedClick(
+  audioCtx: AudioContext,
+  time: number,
+  tone: SoundProfileTone,
+  outputNode: AudioNode,
+  noiseBuffer: AudioBuffer,
+) {
+  const decay = tone.decay ?? 0.03;
+  const duration = tone.duration ?? 0.05;
+  const baseFrequency = tone.frequency ?? 2100;
+  const baseGain = (tone.volume ?? 0.22) * CLICK_GAIN_MULTIPLIER;
+
+  const stackedGain = audioCtx.createGain();
+  stackedGain.gain.setValueAtTime(0.0001, time);
+  stackedGain.gain.exponentialRampToValueAtTime(baseGain * 1.35, time + 0.001);
+  stackedGain.gain.exponentialRampToValueAtTime(0.0001, time + Math.max(0.02, decay));
+
+  const partials = [
+    { ratio: 1, gain: 0.6, detune: -6 },
+    { ratio: 1.45, gain: 0.35, detune: 3 },
+    { ratio: 2.2, gain: 0.25, detune: -2 },
+    { ratio: 3.1, gain: 0.18, detune: 1 },
+  ];
+
+  partials.forEach(({ ratio, gain, detune }) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(baseFrequency * ratio, time);
+    osc.detune.setValueAtTime(detune, time);
+
+    const oscGain = audioCtx.createGain();
+    oscGain.gain.setValueAtTime(gain, time);
+    osc.connect(oscGain).connect(stackedGain);
+    osc.start(time);
+    osc.stop(time + duration);
+  });
+
+  const sparkleOsc = audioCtx.createOscillator();
+  sparkleOsc.type = "sine";
+  sparkleOsc.frequency.setValueAtTime(baseFrequency * 4.4, time);
+
+  const sparkleGain = audioCtx.createGain();
+  sparkleGain.gain.setValueAtTime(0.0001, time);
+  sparkleGain.gain.exponentialRampToValueAtTime(baseGain * 0.45, time + 0.0006);
+  sparkleGain.gain.exponentialRampToValueAtTime(0.0001, time + Math.min(0.01, decay));
+  sparkleOsc.connect(sparkleGain).connect(stackedGain);
+  sparkleOsc.start(time);
+  sparkleOsc.stop(time + Math.min(0.02, duration));
+
+  const noiseSource = audioCtx.createBufferSource();
+  noiseSource.buffer = noiseBuffer;
+
+  const noiseBandpass = audioCtx.createBiquadFilter();
+  noiseBandpass.type = "bandpass";
+  noiseBandpass.frequency.setValueAtTime(baseFrequency * 2.6, time);
+  noiseBandpass.Q.value = 1.4;
+
+  const noiseHighpass = audioCtx.createBiquadFilter();
+  noiseHighpass.type = "highpass";
+  noiseHighpass.frequency.setValueAtTime(1200, time);
+
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(0.0001, time);
+  noiseGain.gain.exponentialRampToValueAtTime(baseGain * 0.7, time + 0.0005);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, time + Math.min(0.014, decay));
+
+  noiseSource.connect(noiseBandpass).connect(noiseHighpass).connect(noiseGain).connect(stackedGain);
+  noiseSource.start(time);
+  noiseSource.stop(time + Math.min(0.02, duration));
+
+  stackedGain.connect(outputNode);
+}
+
 function createClick(
   audioCtx: AudioContext,
   time: number,
@@ -120,6 +193,10 @@ function createClick(
   const tone = variant === "A" ? profile.accent : profile.regular;
   if (tone.preset === "loud") {
     createLoudClick(audioCtx, time, tone, outputNode, noiseBuffer);
+    return;
+  }
+  if (tone.preset === "stacked") {
+    createStackedClick(audioCtx, time, tone, outputNode, noiseBuffer);
     return;
   }
   const decay = tone.decay ?? 0.04;

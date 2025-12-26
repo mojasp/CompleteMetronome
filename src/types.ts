@@ -6,7 +6,7 @@ export type SoundProfileTone = {
   volume?: number;
   decay?: number;
   duration?: number;
-  preset?: "loud";
+  preset?: "loud" | "stacked";
 };
 
 export type SoundProfile = {

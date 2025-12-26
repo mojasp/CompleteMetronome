@@ -140,7 +140,14 @@ function updateSubdivisionsForDenominator(denominator: number) {
 const SOUND_PROFILES: SoundProfileOption[] = [
   {
     label: "Click",
-    accent: { type: "square", frequency: 2600, volume: 0.3, decay: 0.018, duration: 0.032 },
+    accent: {
+      type: "sine",
+      frequency: 2150,
+      volume: 0.24,
+      decay: 0.028,
+      duration: 0.045,
+      preset: "stacked",
+    },
     regular: { type: "square", frequency: 1700, volume: 0.2, decay: 0.025, duration: 0.04 },
   },
   {
