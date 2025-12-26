@@ -1021,6 +1021,7 @@ select {
   gap: 10px;
   grid-template-columns: repeat(var(--grid-columns), var(--cell-size));
   justify-content: center;
+  margin-top: 0;
 }
 
 .beat-grid {
@@ -1029,7 +1030,8 @@ select {
   gap: 10px;
   grid-template-columns: repeat(var(--beat-grid-columns), minmax(0, 1fr));
   justify-content: center;
-  margin-bottom: 12px;
+  margin-top: -10px;
+  margin-bottom: 0;
 }
 
 .beat-grid.is-hidden {
