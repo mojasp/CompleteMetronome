@@ -537,6 +537,35 @@ function attachWheelControls() {
 
   let isActive = false;
   let lastAngle = 0;
+  let moved = false;
+  let lastTapTime = 0;
+  let tapIntervals: number[] = [];
+  let lastTouchEnd = 0;
+  const TAP_TIMEOUT_MS = 2000;
+  const TAP_MIN_INTERVAL_MS = 120;
+  const TAP_MAX_INTERVAL_MS = 2000;
+  const MAX_TAP_SAMPLES = 5;
+
+  const registerTap = () => {
+    const now = performance.now();
+    if (lastTapTime && now - lastTapTime > TAP_TIMEOUT_MS) {
+      tapIntervals = [];
+    }
+    if (lastTapTime) {
+      const interval = now - lastTapTime;
+      if (interval >= TAP_MIN_INTERVAL_MS && interval <= TAP_MAX_INTERVAL_MS) {
+        tapIntervals.push(interval);
+        if (tapIntervals.length > MAX_TAP_SAMPLES) {
+          tapIntervals.shift();
+        }
+        const average =
+          tapIntervals.reduce((total, value) => total + value, 0) / tapIntervals.length;
+        const bpm = Math.round(60000 / average);
+        setTempo(bpm);
+      }
+    }
+    lastTapTime = now;
+  };
 
   const handlePointer = (event: PointerEvent) => {
     if (!isActive) {
@@ -550,9 +579,13 @@ function attachWheelControls() {
     } else if (delta < -180) {
       delta += 360;
     }
+    if (Math.abs(delta) > 2) {
+      moved = true;
+    }
     lastAngle = angle;
     const bpmDelta = Math.round(delta * BPM_PER_DEGREE);
     if (bpmDelta !== 0) {
+      moved = true;
       setTempo(state.bpm + bpmDelta);
       wheelAngle += bpmDelta / BPM_PER_DEGREE;
       updateWheelDisplay();
@@ -565,6 +598,9 @@ function attachWheelControls() {
     }
     tempoWheel.releasePointerCapture(event.pointerId);
     isActive = false;
+    if (!moved) {
+      registerTap();
+    }
   };
 
   tempoWheel.addEventListener("pointerdown", (event: PointerEvent) => {
@@ -572,11 +608,26 @@ function attachWheelControls() {
     tempoWheel.setPointerCapture(event.pointerId);
     lastAngle = angleFromPointer(event, tempoWheel);
     wheelAngle = (wheelAngle % 360 + 360) % 360;
+    moved = false;
     handlePointer(event);
   });
   tempoWheel.addEventListener("pointermove", handlePointer);
   tempoWheel.addEventListener("pointerup", handlePointerUp);
   tempoWheel.addEventListener("pointercancel", handlePointerUp);
+  tempoWheel.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+  });
+  tempoWheel.addEventListener(
+    "touchend",
+    (event: TouchEvent) => {
+      const now = performance.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    },
+    { passive: false },
+  );
 }
 
 function setupControls() {
