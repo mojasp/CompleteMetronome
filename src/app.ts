@@ -80,6 +80,8 @@ type TimeSignature = {
 type Subdivision = {
   label: string;
   perBeat: number;
+  totalSubdivisions: number;
+  groupSize: number;
 };
 
 type SoundProfileOption = SoundProfile & { label: string };
@@ -100,24 +102,17 @@ const NOTE_LABELS: Record<number, string> = {
   32: "Thirtysecond",
 };
 
-const SUBDIVISION_FACTORS = [1, 2, 3, 4];
+const SUBDIVISION_FACTORS = [1, 2, 4];
+const TRIPLET_NOTE_VALUES = [4, 8, 16];
+const DEFAULT_BEATS_PER_BAR = 4;
+const DEFAULT_DENOMINATOR = 4;
 
 function noteLabel(value: number) {
   return NOTE_LABELS[value] ?? `${value}`;
 }
 
-function buildSubdivisions(denominator: number): Subdivision[] {
-  return SUBDIVISION_FACTORS.map((factor) => {
-    if (factor === 3) {
-      const tripletNoteValue = denominator * 2;
-      if (tripletNoteValue > 32) {
-        return null;
-      }
-      return {
-        label: `${tripletNoteValue}triplet`,
-        perBeat: factor,
-      };
-    }
+function buildSubdivisions(denominator: number, beatsPerBar: number): Subdivision[] {
+  const standard = SUBDIVISION_FACTORS.map((factor) => {
     const noteValue = denominator * factor;
     if (noteValue > 32) {
       return null;
@@ -125,14 +120,39 @@ function buildSubdivisions(denominator: number): Subdivision[] {
     return {
       label: noteLabel(noteValue),
       perBeat: factor,
+      totalSubdivisions: beatsPerBar * factor,
+      groupSize: factor,
     };
   }).filter((entry): entry is Subdivision => Boolean(entry));
+
+  const tripletCandidates = [denominator, denominator * 2].filter((value) =>
+    TRIPLET_NOTE_VALUES.includes(value),
+  );
+  const triplets = tripletCandidates.map((noteValue) => {
+    if (noteValue > 32) {
+      return null;
+    }
+    const numerator = beatsPerBar * 3 * noteValue;
+    const denominatorTotal = 2 * denominator;
+    if (numerator % denominatorTotal !== 0) {
+      return null;
+    }
+    const totalSubdivisions = numerator / denominatorTotal;
+    return {
+      label: `${noteValue}triplet`,
+      perBeat: totalSubdivisions / beatsPerBar,
+      totalSubdivisions,
+      groupSize: 3,
+    };
+  }).filter((entry): entry is Subdivision => Boolean(entry));
+
+  return [...standard, ...triplets];
 }
 
-const SUBDIVISIONS: Subdivision[] = buildSubdivisions(DENOMINATORS[0]);
+const SUBDIVISIONS: Subdivision[] = buildSubdivisions(DEFAULT_DENOMINATOR, DEFAULT_BEATS_PER_BAR);
 
-function updateSubdivisionsForDenominator(denominator: number) {
-  const next = buildSubdivisions(denominator);
+function updateSubdivisionsForTimeSignature(denominator: number, beatsPerBar: number) {
+  const next = buildSubdivisions(denominator, beatsPerBar);
   SUBDIVISIONS.length = 0;
   SUBDIVISIONS.push(...next);
 }
@@ -293,10 +313,7 @@ let randomMuteCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = 
 let subdivisionWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 
 function totalSubdivisions() {
-  return (
-    TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar *
-    SUBDIVISIONS[state.subdivisionIndex].perBeat
-  );
+  return SUBDIVISIONS[state.subdivisionIndex].totalSubdivisions;
 }
 
 function initSoundStates() {
@@ -358,8 +375,10 @@ function render() {
   const subdivisionsPerBeat = SUBDIVISIONS[state.subdivisionIndex].perBeat;
   const beatsPerBar = TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar;
   const activeBeatIndex =
-    state.activeIndex >= 0 ? Math.floor(state.activeIndex / subdivisionsPerBeat) : -1;
-  ui.setBeatGridVisible(subdivisionsPerBeat > 1);
+    state.activeIndex >= 0
+      ? Math.floor((state.activeIndex * beatsPerBar) / totalSubdivisions())
+      : -1;
+  ui.setBeatGridVisible(subdivisionsPerBeat !== 1);
   ui.renderBeatGrid({
     totalBeats: beatsPerBar,
     activeIndex: activeBeatIndex,
@@ -367,6 +386,7 @@ function render() {
   ui.renderSubdivisionGrid({
     totalSubdivisions: totalSubdivisions(),
     subdivisionsPerBeat,
+    groupSize: SUBDIVISIONS[state.subdivisionIndex].groupSize,
     soundStates: state.soundStates,
     activeIndex: state.activeIndex,
   });
@@ -376,6 +396,13 @@ function setTimeSignatureNumeratorIndex(nextIndex: number, syncPicker = true) {
   const clamped = Math.max(0, Math.min(TIME_SIGNATURES.length - 1, nextIndex));
   state.timeSignatureNumeratorIndex = clamped;
   ui.setSelectValue(timeSignatureNumeratorSelect, clamped);
+  const beatsPerBar = TIME_SIGNATURES[clamped].beatsPerBar;
+  const denominator = DENOMINATORS[state.timeSignatureDenominatorIndex];
+  updateSubdivisionsForTimeSignature(denominator, beatsPerBar);
+  state.subdivisionIndex = Math.max(0, Math.min(SUBDIVISIONS.length - 1, state.subdivisionIndex));
+  ui.populateSelect(subdivisionSelect, SUBDIVISIONS);
+  ui.setSelectValue(subdivisionSelect, state.subdivisionIndex);
+  subdivisionWheelPicker?.setOptions(SUBDIVISIONS);
   initSoundStates();
   updateAudioSettings();
   restartPlaybackIfNeeded();
@@ -389,7 +416,10 @@ function setTimeSignatureDenominatorIndex(nextIndex: number, syncPicker = true) 
   const clamped = Math.max(0, Math.min(DENOMINATORS.length - 1, nextIndex));
   state.timeSignatureDenominatorIndex = clamped;
   ui.setSelectValue(timeSignatureDenominatorSelect, clamped);
-  updateSubdivisionsForDenominator(DENOMINATORS[clamped]);
+  updateSubdivisionsForTimeSignature(
+    DENOMINATORS[clamped],
+    TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar,
+  );
   state.subdivisionIndex = Math.max(0, Math.min(SUBDIVISIONS.length - 1, state.subdivisionIndex));
   ui.populateSelect(subdivisionSelect, SUBDIVISIONS);
   ui.setSelectValue(subdivisionSelect, state.subdivisionIndex);
@@ -859,7 +889,9 @@ async function startPlayback() {
     onTick: (tickIndex: number) => {
       state.activeIndex = tickIndex;
       ui.setActiveSubdivision(tickIndex);
-      const beatIndex = Math.floor(tickIndex / subdivision.perBeat);
+      const beatIndex = Math.floor(
+        (tickIndex * timeSignature.beatsPerBar) / subdivision.totalSubdivisions,
+      );
       ui.setActiveBeat(beatIndex);
       if (tickIndex === 0) {
         if (state.trainerEnabled) {
@@ -1200,7 +1232,10 @@ function attachWheelControls() {
 }
 
 function setupControls() {
-  updateSubdivisionsForDenominator(DENOMINATORS[state.timeSignatureDenominatorIndex]);
+  updateSubdivisionsForTimeSignature(
+    DENOMINATORS[state.timeSignatureDenominatorIndex],
+    TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar,
+  );
   ui.populateSelect(timeSignatureNumeratorSelect, TIME_SIGNATURES);
   ui.populateSelect(
     timeSignatureDenominatorSelect,

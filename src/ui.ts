@@ -17,6 +17,7 @@ type SelectOption = { label: string };
 type SubdivisionGridState = {
   totalSubdivisions: number;
   subdivisionsPerBeat: number;
+  groupSize: number;
   soundStates: SoundState[];
   activeIndex: number;
 };
@@ -66,6 +67,7 @@ export function createUI({
   function renderSubdivisionGrid({
     totalSubdivisions,
     subdivisionsPerBeat,
+    groupSize,
     soundStates,
     activeIndex,
   }: SubdivisionGridState) {
@@ -90,7 +92,7 @@ export function createUI({
       cell.classList.toggle("sound-a", soundState === "A");
       cell.classList.toggle("sound-b", soundState === "B");
       cell.classList.toggle("sound-mute", soundState === "mute");
-      cell.classList.toggle("is-beat-boundary", i % subdivisionsPerBeat === 0);
+      cell.classList.toggle("is-beat-boundary", i % groupSize === 0);
       cell.classList.toggle("is-active", i === activeIndex);
     });
 
