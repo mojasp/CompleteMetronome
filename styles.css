@@ -153,6 +153,7 @@ h1 {
   letter-spacing: 0.12em;
   padding: 6px 10px;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .tempo-block {
@@ -351,6 +352,7 @@ h1 {
   font-family: var(--font-display);
   cursor: pointer;
   border: 1px solid color-mix(in srgb, var(--accent-2) 55%, var(--paper));
+  touch-action: manipulation;
 }
 
 .transport-button.is-playing {
@@ -374,6 +376,7 @@ h1 {
   font-size: 0.85rem;
   font-family: var(--font-display);
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .trainer-disclosure.is-enabled {
@@ -396,6 +399,7 @@ h1 {
   font-size: 0.85rem;
   font-family: var(--font-display);
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .random-mute-disclosure.is-enabled {
@@ -569,6 +573,7 @@ h1 {
   user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
+  touch-action: manipulation;
 }
 
 .wheel-picker {
@@ -722,6 +727,7 @@ h1 {
   font-size: 0.75rem;
   font-family: var(--font-display);
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .random-mute-countin-disclosure.is-enabled {
@@ -912,6 +918,7 @@ select {
   font-size: 0.85rem;
   font-family: var(--font-display);
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .accent-disclosure.is-enabled {
