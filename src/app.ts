@@ -91,12 +91,50 @@ const TIME_SIGNATURES: TimeSignature[] = NUMERATORS.map((beats) => ({
   beatsPerBar: beats,
 }));
 
-const SUBDIVISIONS: Subdivision[] = [
-  { label: "Quarter", perBeat: 1 },
-  { label: "Eighth", perBeat: 2 },
-  { label: "Triplet", perBeat: 3 },
-  { label: "Sixteenth", perBeat: 4 },
-];
+const NOTE_LABELS: Record<number, string> = {
+  2: "Half",
+  4: "Quarter",
+  8: "Eighth",
+  16: "Sixteenth",
+  32: "Thirtysecond",
+};
+
+const SUBDIVISION_FACTORS = [1, 2, 3, 4];
+
+function noteLabel(value: number) {
+  return NOTE_LABELS[value] ?? `${value}`;
+}
+
+function buildSubdivisions(denominator: number): Subdivision[] {
+  return SUBDIVISION_FACTORS.map((factor) => {
+    if (factor === 3) {
+      const tripletNoteValue = denominator * 2;
+      if (tripletNoteValue > 32) {
+        return null;
+      }
+      return {
+        label: `${tripletNoteValue}triplet`,
+        perBeat: factor,
+      };
+    }
+    const noteValue = denominator * factor;
+    if (noteValue > 32) {
+      return null;
+    }
+    return {
+      label: noteLabel(noteValue),
+      perBeat: factor,
+    };
+  }).filter((entry): entry is Subdivision => Boolean(entry));
+}
+
+const SUBDIVISIONS: Subdivision[] = buildSubdivisions(DENOMINATORS[0]);
+
+function updateSubdivisionsForDenominator(denominator: number) {
+  const next = buildSubdivisions(denominator);
+  SUBDIVISIONS.length = 0;
+  SUBDIVISIONS.push(...next);
+}
 
 const SOUND_PROFILES: SoundProfileOption[] = [
   {
@@ -220,9 +258,11 @@ let wheelPickers: Array<{
   close: () => void;
   isOpen: () => boolean;
   contains: (target: Node) => boolean;
+  setOptions: (options: Array<{ label: string }>) => void;
 }> = [];
 let accentWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let randomMuteCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
+let subdivisionWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 
 function totalSubdivisions() {
   return (
@@ -310,6 +350,11 @@ function setTimeSignatureDenominatorIndex(nextIndex: number, syncPicker = true) 
   const clamped = Math.max(0, Math.min(DENOMINATORS.length - 1, nextIndex));
   state.timeSignatureDenominatorIndex = clamped;
   ui.setSelectValue(timeSignatureDenominatorSelect, clamped);
+  updateSubdivisionsForDenominator(DENOMINATORS[clamped]);
+  state.subdivisionIndex = Math.max(0, Math.min(SUBDIVISIONS.length - 1, state.subdivisionIndex));
+  ui.populateSelect(subdivisionSelect, SUBDIVISIONS);
+  ui.setSelectValue(subdivisionSelect, state.subdivisionIndex);
+  subdivisionWheelPicker?.setOptions(SUBDIVISIONS);
   initSoundStates();
   updateAudioSettings();
   if (syncPicker) {
@@ -419,7 +464,7 @@ function createWheelPicker({
   field,
   trigger,
   picker,
-  options,
+  options: initialOptions,
   getIndex,
   setIndex,
   bindTrigger = true,
@@ -434,6 +479,7 @@ function createWheelPicker({
   bindTrigger?: boolean;
   onSelect?: () => void;
 }) {
+  let options = initialOptions;
   let items: HTMLButtonElement[] = [];
   let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
   let isScrolling = false;
@@ -458,6 +504,10 @@ function createWheelPicker({
     const activeIndex = getIndex();
     trigger.textContent = options[activeIndex]?.label ?? "";
     items.forEach((item, index) => {
+      const option = options[index];
+      if (option) {
+        item.textContent = option.label;
+      }
       const isActive = index === activeIndex;
       item.classList.toggle("is-active", isActive);
       item.setAttribute("aria-selected", isActive ? "true" : "false");
@@ -479,26 +529,30 @@ function createWheelPicker({
     spacerBottom.style.height = `${spacerHeight}px`;
   };
 
-  picker.innerHTML = "";
-  spacerTop = document.createElement("div");
-  spacerTop.className = "wheel-picker-spacer";
-  picker.appendChild(spacerTop);
+  const buildItems = () => {
+    picker.innerHTML = "";
+    spacerTop = document.createElement("div");
+    spacerTop.className = "wheel-picker-spacer";
+    picker.appendChild(spacerTop);
 
-  items = options.map((option, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "wheel-picker-item";
-    button.textContent = option.label;
-    button.dataset.index = String(index);
-    button.setAttribute("role", "option");
-    button.setAttribute("aria-selected", "false");
-    picker.appendChild(button);
-    return button;
-  });
+    items = options.map((option, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "wheel-picker-item";
+      button.textContent = option.label;
+      button.dataset.index = String(index);
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", "false");
+      picker.appendChild(button);
+      return button;
+    });
 
-  spacerBottom = document.createElement("div");
-  spacerBottom.className = "wheel-picker-spacer";
-  picker.appendChild(spacerBottom);
+    spacerBottom = document.createElement("div");
+    spacerBottom.className = "wheel-picker-spacer";
+    picker.appendChild(spacerBottom);
+  };
+
+  buildItems();
 
   requestAnimationFrame(() => {
     resize();
@@ -655,6 +709,13 @@ function createWheelPicker({
     open,
     isOpen: () => isOpen,
     contains: (target: Node) => field.contains(target),
+    setOptions: (nextOptions: Array<{ label: string }>) => {
+      options = nextOptions;
+      buildItems();
+      resize();
+      scrollToIndex(getIndex());
+      sync(false);
+    },
   };
 }
 
@@ -1072,6 +1133,7 @@ function attachWheelControls() {
 }
 
 function setupControls() {
+  updateSubdivisionsForDenominator(DENOMINATORS[state.timeSignatureDenominatorIndex]);
   ui.populateSelect(timeSignatureNumeratorSelect, TIME_SIGNATURES);
   ui.populateSelect(
     timeSignatureDenominatorSelect,
@@ -1119,6 +1181,15 @@ function setupControls() {
   ui.setSelectValue(randomMuteCountInBarsSelect, state.randomMuteCountInBarsIndex);
   ui.setSelectValue(accentBarsSelect, state.accentBarsIndex);
 
+  subdivisionWheelPicker = createWheelPicker({
+    field: subdivisionPicker.parentElement as HTMLDivElement,
+    trigger: subdivisionTrigger,
+    picker: subdivisionPicker,
+    options: SUBDIVISIONS,
+    getIndex: () => state.subdivisionIndex,
+    setIndex: setSubdivisionIndex,
+  });
+
   wheelPickers = [
     createWheelPicker({
       field: numeratorPicker.parentElement as HTMLDivElement,
@@ -1136,14 +1207,7 @@ function setupControls() {
       getIndex: () => state.timeSignatureDenominatorIndex,
       setIndex: setTimeSignatureDenominatorIndex,
     }),
-    createWheelPicker({
-      field: subdivisionPicker.parentElement as HTMLDivElement,
-      trigger: subdivisionTrigger,
-      picker: subdivisionPicker,
-      options: SUBDIVISIONS,
-      getIndex: () => state.subdivisionIndex,
-      setIndex: setSubdivisionIndex,
-    }),
+    subdivisionWheelPicker,
     createWheelPicker({
       field: soundProfilePicker.parentElement as HTMLDivElement,
       trigger: soundProfileTrigger,

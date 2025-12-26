@@ -483,6 +483,10 @@ h1 {
   font-size: 0.9rem;
 }
 
+.select-field--subdivision .wheel-field {
+  min-width: 220px;
+}
+
 .volume-control {
   display: flex;
   align-items: center;
