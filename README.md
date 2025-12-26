@@ -1,7 +1,7 @@
-# Simple Metronome
+# Complete Metronome
 
-Browser-based metronome with adjustable tempo, time signatures, and
-subdivisions. The intended audience is mobile, very low care is given to
+Browser-based and feature-complete metronome. It is feature-complete in the sense that it has all the features that i want and imagine to be useful, nothing more.
+The intended audience is mobile, very low care is given to
 provide an ergonomic desktop experience although it works - but the ui might
 not be nice.
 
@@ -18,7 +18,7 @@ Features:
 No runtime dependencies except for capacitor for android builds; no backend.
 Everything is html, css and vanilla typescript.
 
-Disclaimer: The proceeding part of this readme, as well as the rest of the
+**Disclaimer**: The proceeding part of this readme, as well as the rest of the
 codebase, are heavily vibecoded. If you read further, know that you are reading
 the output of a computer program: do not seek structure or meaning. I do not
 advocate the use of LLM's - nothing was learned, no knowledge gained in the
@@ -31,6 +31,14 @@ does not have them.
 
 This project is licensed under the GNU Affero General Public License v3.0.
 See the LICENSE file for details.
+
+## Roadmap
+
+This is pretty much complete in terms of features. Some bugfixes may follow, potentially some small-ish QoL and UI updates. Moreover, maybe i will introduce some icons if i get around to finding a FOSS iconset for notes. Uneven subdivisions for a bar and/or swing percentages would be nice, but they are really a gimmick imo. If you have easy-to-implement requests, feel free to open an issue.
+
+## Contributions
+
+I am accepting contributions and bug reports, feel free to open issues or pull requests.
 
 ## Development
 
