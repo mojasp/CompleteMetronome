@@ -17,6 +17,7 @@ const tempoBlock = getElement<HTMLDivElement>("tempo-block");
 const tempoDisplay = getElement<HTMLDivElement>("tempo-display");
 const tempoWheel = getElement<HTMLDivElement>("tempo-wheel");
 const soundProfileSelect = getElement<HTMLSelectElement>("sound-profile");
+const volumeInput = getElement<HTMLInputElement>("volume");
 const togglePlay = getElement<HTMLButtonElement>("toggle-play");
 const trainerDisclosure = getElement<HTMLButtonElement>("trainer-disclosure");
 const trainerPanel = getElement<HTMLDivElement>("trainer-panel");
@@ -102,6 +103,11 @@ const ACCENT_BARS = Array.from({ length: 63 }, (_, index) => index + 2);
 const RANDOM_MUTE_PERCENTS = Array.from({ length: 21 }, (_, index) => index * 5);
 const RANDOM_MUTE_COUNTIN_BARS = Array.from({ length: 65 }, (_, index) => index);
 const BPM_PER_DEGREE = 0.4;
+const VOLUME_MIN = 0;
+const VOLUME_MAX = 1000;
+const VOLUME_DEFAULT = 500;
+const VOLUME_MIDPOINT = 500;
+const VOLUME_MAX_GAIN = 10;
 const THEME_PREFERENCE_KEY = "theme-preference";
 
 type MetronomeState = {
@@ -113,6 +119,7 @@ type MetronomeState = {
   soundProfileIndex: number;
   activeIndex: number;
   soundStates: SoundState[];
+  volumeControl: number;
   trainerBarsIndex: number;
   trainerBpmIndex: number;
   trainerSecondsIndex: number;
@@ -143,6 +150,7 @@ const state: MetronomeState = {
   soundProfileIndex: 1,
   activeIndex: -1,
   soundStates: [],
+  volumeControl: VOLUME_DEFAULT,
   trainerBarsIndex: 3,
   trainerBpmIndex: 1,
   trainerSecondsIndex: 0,
@@ -217,6 +225,7 @@ function render() {
   randomMuteRampValue.textContent = rampBars <= 0 ? "Immediate" : `${rampBars} bars`;
   randomMuteCountInToggle.checked = state.randomMuteCountInEnabled;
   randomMuteCountInBarsSelect.disabled = !state.randomMuteCountInEnabled;
+  volumeInput.value = String(state.volumeControl);
   const accentBars = ACCENT_BARS[state.accentBarsIndex];
   accentDisclosure.textContent = state.accentConfigured
     ? `Accent every ${accentBars} bars`
@@ -242,6 +251,7 @@ function updateAudioSettings() {
     beatsPerBar: timeSignature.beatsPerBar,
     subdivisionsPerBeat: subdivision.perBeat,
     soundProfile: SOUND_PROFILES[state.soundProfileIndex],
+    volume: volumeFromControl(state.volumeControl),
   });
 }
 
@@ -327,6 +337,7 @@ async function startPlayback() {
     beatsPerBar: timeSignature.beatsPerBar,
     subdivisionsPerBeat: subdivision.perBeat,
     soundProfile: SOUND_PROFILES[state.soundProfileIndex],
+    volume: volumeFromControl(state.volumeControl),
     onTick: (tickIndex: number) => {
       state.activeIndex = tickIndex;
       ui.setActiveSubdivision(tickIndex);
@@ -399,6 +410,19 @@ function setTempo(nextBpm: number) {
 
 function setSoundProfile(nextIndex: number) {
   state.soundProfileIndex = Math.max(0, Math.min(SOUND_PROFILES.length - 1, nextIndex));
+  updateAudioSettings();
+  render();
+}
+
+function volumeFromControl(value: number) {
+  const clamped = Math.min(VOLUME_MAX, Math.max(VOLUME_MIN, value));
+  const normalized = (clamped - VOLUME_MIDPOINT) / VOLUME_MIDPOINT;
+  return Math.pow(VOLUME_MAX_GAIN, normalized);
+}
+
+function setVolume(nextValue: number) {
+  const clamped = Math.min(VOLUME_MAX, Math.max(VOLUME_MIN, Math.round(nextValue)));
+  state.volumeControl = clamped;
   updateAudioSettings();
   render();
 }
@@ -868,6 +892,14 @@ function setupControls() {
     state.randomMuteRampSpeed = Math.min(100, Math.max(1, Math.round(nextValue)));
     state.randomMuteConfigured = true;
     render();
+  });
+
+  volumeInput.addEventListener("input", () => {
+    const nextValue = Number(volumeInput.value);
+    if (!Number.isFinite(nextValue)) {
+      return;
+    }
+    setVolume(nextValue);
   });
 
   randomMuteCountInToggle.addEventListener("change", () => {

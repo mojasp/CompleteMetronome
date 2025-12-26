@@ -133,6 +133,17 @@
           <label class="select-field select-field--sound">
             <span class="label">Sound</span>
             <select id="sound-profile"></select>
+            <div class="volume-control">
+              <input
+                id="volume"
+                type="range"
+                min="0"
+                max="1000"
+                step="1"
+                value="500"
+                aria-label="Volume"
+              />
+            </div>
           </label>
 
           <div class="select-field select-field--accent accent-block" id="accent-block">

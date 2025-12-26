@@ -448,6 +448,17 @@ h1 {
   font-size: 0.9rem;
 }
 
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.volume-control input[type="range"] {
+  flex: 1;
+}
+
 @media (min-width: 721px) {
   .selectors {
     grid-template-columns: 1fr;

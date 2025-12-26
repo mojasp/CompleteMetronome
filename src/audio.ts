@@ -2,6 +2,13 @@ import type { SoundProfile, SoundState } from "./types.js";
 
 const DEFAULT_LOOKAHEAD_MS = 25;
 const DEFAULT_SCHEDULE_AHEAD = 0.1;
+const CLICK_GAIN_MULTIPLIER = 1;
+const OUTPUT_GAIN = 1;
+const COMPRESSOR_THRESHOLD = -10;
+const COMPRESSOR_RATIO = 12;
+const COMPRESSOR_KNEE = 12;
+const COMPRESSOR_ATTACK = 0.003;
+const COMPRESSOR_RELEASE = 0.18;
 const DEFAULT_SOUND_PROFILE: SoundProfile = {
   accent: { type: "triangle", frequency: 1200, volume: 0.18, decay: 0.05, duration: 0.06 },
   regular: { type: "triangle", frequency: 760, volume: 0.13, decay: 0.05, duration: 0.06 },
@@ -11,7 +18,8 @@ function createClick(
   audioCtx: AudioContext,
   time: number,
   variant: SoundState,
-  soundProfile?: SoundProfile,
+  soundProfile: SoundProfile | undefined,
+  outputNode: AudioNode,
 ) {
   if (variant === "mute") {
     return;
@@ -28,10 +36,11 @@ function createClick(
   osc.type = tone.type ?? "square";
   osc.frequency.value = tone.frequency ?? 900;
 
-  gain.gain.setValueAtTime(tone.volume ?? 0.16, time);
+  const baseGain = tone.volume ?? 0.16;
+  gain.gain.setValueAtTime(baseGain * CLICK_GAIN_MULTIPLIER, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + decay);
 
-  osc.connect(gain).connect(audioCtx.destination);
+  osc.connect(gain).connect(outputNode);
   osc.start(time);
   osc.stop(time + duration);
 }
@@ -41,6 +50,7 @@ type StartOptions = {
   beatsPerBar: number;
   subdivisionsPerBeat: number;
   soundProfile: SoundProfile;
+  volume: number;
   onTick: (tickIndex: number) => void;
   getSoundState: (tickIndex: number) => SoundState;
 };
@@ -50,6 +60,7 @@ type UpdateOptions = Partial<{
   beatsPerBar: number;
   subdivisionsPerBeat: number;
   soundProfile: SoundProfile;
+  volume: number;
 }>;
 
 type MetronomeAudio = {
@@ -68,12 +79,27 @@ export function createMetronomeAudio(): MetronomeAudio {
   let beatsPerBar = 4;
   let subdivisionsPerBeat = 1;
   let soundProfile = DEFAULT_SOUND_PROFILE;
+  let volume = 1;
   let onTick: (tickIndex: number) => void = () => {};
   let getSoundState: (tickIndex: number) => SoundState = () => "mute";
   let pendingTickTimeouts: Array<ReturnType<typeof setTimeout>> = [];
+  let outputNode: AudioNode | null = null;
+  let masterGain: GainNode | null = null;
+  let compressor: DynamicsCompressorNode | null = null;
   const AudioContextCtor =
     window.AudioContext ||
     (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+  function applyVolume() {
+    if (!masterGain) {
+      return;
+    }
+    masterGain.gain.value = OUTPUT_GAIN * volume;
+    if (!compressor) {
+      return;
+    }
+    outputNode = volume > 1 ? compressor : masterGain;
+  }
 
   function ensureAudioContext() {
     if (audioCtx) {
@@ -83,6 +109,17 @@ export function createMetronomeAudio(): MetronomeAudio {
       throw new Error("Web Audio API not supported.");
     }
     audioCtx = new AudioContextCtor();
+    compressor = audioCtx.createDynamicsCompressor();
+    compressor.threshold.value = COMPRESSOR_THRESHOLD;
+    compressor.ratio.value = COMPRESSOR_RATIO;
+    compressor.knee.value = COMPRESSOR_KNEE;
+    compressor.attack.value = COMPRESSOR_ATTACK;
+    compressor.release.value = COMPRESSOR_RELEASE;
+
+    masterGain = audioCtx.createGain();
+    applyVolume();
+    compressor.connect(masterGain).connect(audioCtx.destination);
+    outputNode = masterGain;
     return audioCtx;
   }
 
@@ -98,7 +135,9 @@ export function createMetronomeAudio(): MetronomeAudio {
 
     while (nextNoteTime < ctx.currentTime + DEFAULT_SCHEDULE_AHEAD) {
       const soundState = getSoundState(currentTick);
-      createClick(ctx, nextNoteTime, soundState, soundProfile);
+      if (outputNode) {
+        createClick(ctx, nextNoteTime, soundState, soundProfile, outputNode);
+      }
       const tickToSend = currentTick;
       const tickTime = nextNoteTime;
 
@@ -117,6 +156,7 @@ export function createMetronomeAudio(): MetronomeAudio {
       beatsPerBar: nextBeatsPerBar,
       subdivisionsPerBeat: nextSubdivisions,
       soundProfile: nextSoundProfile,
+      volume: nextVolume,
       onTick: nextOnTick,
       getSoundState: nextSoundState,
     }: StartOptions) {
@@ -128,11 +168,13 @@ export function createMetronomeAudio(): MetronomeAudio {
       beatsPerBar = nextBeatsPerBar;
       subdivisionsPerBeat = nextSubdivisions;
       soundProfile = nextSoundProfile || soundProfile;
+      volume = nextVolume ?? volume;
+      applyVolume();
       onTick = nextOnTick;
       getSoundState = nextSoundState;
 
       currentTick = 0;
-      nextNoteTime = ctx.currentTime + 0.05;
+      nextNoteTime = ctx.currentTime + 0.12;
       pendingTickTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
       pendingTickTimeouts = [];
 
@@ -157,11 +199,14 @@ export function createMetronomeAudio(): MetronomeAudio {
       beatsPerBar: nextBeats,
       subdivisionsPerBeat: nextSubdivs,
       soundProfile: nextSoundProfile,
+      volume: nextVolume,
     }: UpdateOptions) {
       bpm = nextBpm ?? bpm;
       beatsPerBar = nextBeats ?? beatsPerBar;
       subdivisionsPerBeat = nextSubdivs ?? subdivisionsPerBeat;
       soundProfile = nextSoundProfile ?? soundProfile;
+      volume = nextVolume ?? volume;
+      applyVolume();
     },
   };
 }
