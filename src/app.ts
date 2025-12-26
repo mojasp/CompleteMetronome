@@ -1097,7 +1097,7 @@ function setupControls() {
   );
   ui.populateSelect(
     randomMutePercentSelect,
-    RANDOM_MUTE_PERCENTS.map((value) => ({ label: String(value) })),
+    RANDOM_MUTE_PERCENTS.map((value) => ({ label: `${value}%` })),
   );
   ui.populateSelect(
     randomMuteCountInBarsSelect,
@@ -1188,7 +1188,7 @@ function setupControls() {
       field: randomMutePercentSelect.parentElement as HTMLDivElement,
       trigger: randomMutePercentTrigger,
       picker: randomMutePercentPicker,
-      options: RANDOM_MUTE_PERCENTS.map((value) => ({ label: String(value) })),
+      options: RANDOM_MUTE_PERCENTS.map((value) => ({ label: `${value}%` })),
       getIndex: () => state.randomMutePercentIndex,
       setIndex: setRandomMutePercentIndex,
     }),

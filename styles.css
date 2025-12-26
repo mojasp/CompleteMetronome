@@ -688,12 +688,18 @@ h1 {
 }
 
 .random-mute-row--percent {
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   align-items: start;
 }
 
-.random-mute-row .wheel-field {
-  min-width: 44px;
+.random-mute-row--percent .wheel-field {
+  min-width: 40px;
+  max-width: 52px;
+}
+
+.random-mute-controls .wheel-trigger {
+  padding: 6px 8px;
+  font-size: 0.78rem;
 }
 
 .random-mute-countin {
