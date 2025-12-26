@@ -664,12 +664,11 @@ h1 {
 .trainer-controls .wheel-picker-item {
   height: 20px;
   font-size: 0.78rem;
+  text-align: center;
+  margin: 0 4px;
+  width: calc(100% - 8px);
 }
 
-.trainer-controls .wheel-picker-item.is-active {
-  width: calc(100% - 8px);
-  margin: 0 4px;
-}
 
 .trainer-controls .wheel-field.is-open .wheel-picker {
   top: auto;
