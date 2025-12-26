@@ -38,10 +38,17 @@ const trainerSecondsBpmPicker = getElement<HTMLDivElement>("trainer-seconds-bpm-
 const randomMuteDisclosure = getElement<HTMLButtonElement>("random-mute-disclosure");
 const randomMutePanel = getElement<HTMLDivElement>("random-mute-panel");
 const randomMutePercentSelect = getElement<HTMLSelectElement>("random-mute-percent");
+const randomMutePercentTrigger = getElement<HTMLButtonElement>("random-mute-percent-trigger");
+const randomMutePercentPicker = getElement<HTMLDivElement>("random-mute-percent-picker");
 const randomMuteRampInput = getElement<HTMLInputElement>("random-mute-ramp");
 const randomMuteRampValue = getElement<HTMLElement>("random-mute-ramp-value");
-const randomMuteCountInToggle = getElement<HTMLInputElement>("random-mute-countin");
 const randomMuteCountInBarsSelect = getElement<HTMLSelectElement>("random-mute-countin-bars");
+const randomMuteCountInControls = getElement<HTMLDivElement>("random-mute-countin-controls");
+const randomMuteCountInDisclosure = getElement<HTMLButtonElement>("random-mute-countin-disclosure");
+const randomMuteCountInPanel = getElement<HTMLDivElement>("random-mute-countin-panel");
+const randomMuteCountInField = getElement<HTMLDivElement>("random-mute-countin-field");
+const randomMuteCountInTrigger = getElement<HTMLButtonElement>("random-mute-countin-trigger");
+const randomMuteCountInPicker = getElement<HTMLDivElement>("random-mute-countin-picker");
 const accentDisclosure = getElement<HTMLButtonElement>("accent-disclosure");
 const accentPanel = getElement<HTMLDivElement>("accent-panel");
 const accentBarsSelect = getElement<HTMLSelectElement>("accent-bars");
@@ -215,6 +222,7 @@ let wheelPickers: Array<{
   contains: (target: Node) => boolean;
 }> = [];
 let accentWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
+let randomMuteCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 
 function totalSubdivisions() {
   return (
@@ -239,6 +247,9 @@ function render() {
   if (accentWheelPicker) {
     accentWheelPicker.sync(!accentWheelPicker.isScrolling());
   }
+  if (randomMuteCountInWheelPicker) {
+    randomMuteCountInWheelPicker.sync(!randomMuteCountInWheelPicker.isScrolling());
+  }
   const trainerBars = TRAINER_BARS[state.trainerBarsIndex];
   const trainerStep = TRAINER_BPM_STEPS[state.trainerBpmIndex];
   trainerDisclosure.textContent = state.trainerConfigured
@@ -260,8 +271,12 @@ function render() {
   const rampBars = rampBarsFromSpeed(state.randomMuteRampSpeed);
   randomMuteRampInput.value = String(state.randomMuteRampSpeed);
   randomMuteRampValue.textContent = rampBars <= 0 ? "Immediate" : `${rampBars} bars`;
-  randomMuteCountInToggle.checked = state.randomMuteCountInEnabled;
-  randomMuteCountInBarsSelect.disabled = !state.randomMuteCountInEnabled;
+  const countInBars = RANDOM_MUTE_COUNTIN_BARS[state.randomMuteCountInBarsIndex];
+  randomMuteCountInDisclosure.textContent = state.randomMuteCountInEnabled
+    ? `Count-in: ${countInBars} bars`
+    : "Count-in";
+  randomMuteCountInDisclosure.classList.toggle("is-enabled", state.randomMuteCountInEnabled);
+  randomMuteCountInDisclosure.classList.toggle("is-disabled", !state.randomMuteCountInEnabled);
   volumeInput.value = String(state.volumeControl);
   const accentBars = ACCENT_BARS[state.accentBarsIndex];
   accentDisclosure.textContent = state.accentConfigured
@@ -361,6 +376,28 @@ function setTrainerSecondsBpmIndex(nextIndex: number, syncPicker = true) {
   state.trainerConfigured = true;
   ui.setSelectValue(trainerSecondsBpmSelect, clamped);
   startTrainerInterval();
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function setRandomMutePercentIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(RANDOM_MUTE_PERCENTS.length - 1, nextIndex));
+  state.randomMutePercentIndex = clamped;
+  state.randomMuteConfigured = true;
+  ui.setSelectValue(randomMutePercentSelect, clamped);
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function setRandomMuteCountInBarsIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(RANDOM_MUTE_COUNTIN_BARS.length - 1, nextIndex));
+  state.randomMuteCountInBarsIndex = clamped;
+  state.randomMuteConfigured = true;
+  ui.setSelectValue(randomMuteCountInBarsSelect, clamped);
   if (syncPicker) {
     wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
   }
@@ -919,6 +956,21 @@ function openAccentPanel() {
   accentWheelPicker?.open();
 }
 
+function closeRandomMuteCountInPanel() {
+  randomMuteCountInPanel.classList.remove("is-open");
+  randomMuteCountInDisclosure.setAttribute("aria-expanded", "false");
+  randomMuteCountInControls.classList.remove("is-open");
+  randomMuteCountInWheelPicker?.close();
+}
+
+function openRandomMuteCountInPanel() {
+  wheelPickers.forEach((picker) => picker.close());
+  randomMuteCountInPanel.classList.add("is-open");
+  randomMuteCountInDisclosure.setAttribute("aria-expanded", "true");
+  randomMuteCountInControls.classList.add("is-open");
+  randomMuteCountInWheelPicker?.open();
+}
+
 function attachWheelControls() {
   if (!window.matchMedia("(max-width: 720px)").matches) {
     return;
@@ -1132,6 +1184,14 @@ function setupControls() {
       getIndex: () => state.trainerSecondsIndex,
       setIndex: setTrainerSecondsIndex,
     }),
+    createWheelPicker({
+      field: randomMutePercentSelect.parentElement as HTMLDivElement,
+      trigger: randomMutePercentTrigger,
+      picker: randomMutePercentPicker,
+      options: RANDOM_MUTE_PERCENTS.map((value) => ({ label: String(value) })),
+      getIndex: () => state.randomMutePercentIndex,
+      setIndex: setRandomMutePercentIndex,
+    }),
   ];
 
   accentWheelPicker = createWheelPicker({
@@ -1146,9 +1206,23 @@ function setupControls() {
       closeAccentPanel();
     },
   });
+
+  randomMuteCountInWheelPicker = createWheelPicker({
+    field: randomMuteCountInField,
+    trigger: randomMuteCountInTrigger,
+    picker: randomMuteCountInPicker,
+    options: RANDOM_MUTE_COUNTIN_BARS.map((value) => ({ label: String(value) })),
+    getIndex: () => state.randomMuteCountInBarsIndex,
+    setIndex: setRandomMuteCountInBarsIndex,
+    bindTrigger: false,
+    onSelect: () => {
+      closeRandomMuteCountInPanel();
+    },
+  });
   window.addEventListener("resize", () => {
     wheelPickers.forEach((picker) => picker.resize());
     accentWheelPicker?.resize();
+    randomMuteCountInWheelPicker?.resize();
   });
 
   let themePreference = readThemePreference();
@@ -1258,6 +1332,7 @@ function setupControls() {
   randomMuteDisclosure.addEventListener("click", () => {
     if (state.randomMuteEnabled) {
       state.randomMuteEnabled = false;
+      closeRandomMuteCountInPanel();
       randomMutePanel.classList.remove("is-open");
       randomMuteDisclosure.setAttribute("aria-expanded", "false");
       render();
@@ -1267,6 +1342,19 @@ function setupControls() {
     state.randomMuteConfigured = true;
     randomMutePanel.classList.add("is-open");
     randomMuteDisclosure.setAttribute("aria-expanded", "true");
+    render();
+  });
+
+  randomMuteCountInDisclosure.addEventListener("click", () => {
+    if (state.randomMuteCountInEnabled) {
+      state.randomMuteCountInEnabled = false;
+      closeRandomMuteCountInPanel();
+      render();
+      return;
+    }
+    state.randomMuteCountInEnabled = true;
+    state.randomMuteConfigured = true;
+    openRandomMuteCountInPanel();
     render();
   });
 
@@ -1288,6 +1376,9 @@ function setupControls() {
   });
   bindClickOutsideClose(trainerPanel, trainerDisclosure);
   bindClickOutsideClose(randomMutePanel, randomMuteDisclosure);
+  bindClickOutsideClose(randomMuteCountInPanel, randomMuteCountInDisclosure, () => {
+    closeRandomMuteCountInPanel();
+  });
 
   timeSignatureNumeratorSelect.addEventListener("change", (event: Event) => {
     const target = event.target as HTMLSelectElement | null;
@@ -1358,9 +1449,7 @@ function setupControls() {
     if (!target) {
       return;
     }
-    state.randomMutePercentIndex = Number(target.value);
-    state.randomMuteConfigured = true;
-    render();
+    setRandomMutePercentIndex(Number(target.value));
   });
 
   randomMuteRampInput.addEventListener("input", () => {
@@ -1381,20 +1470,13 @@ function setupControls() {
     setVolume(nextValue);
   });
 
-  randomMuteCountInToggle.addEventListener("change", () => {
-    state.randomMuteCountInEnabled = randomMuteCountInToggle.checked;
-    state.randomMuteConfigured = true;
-    render();
-  });
-
   randomMuteCountInBarsSelect.addEventListener("change", (event: Event) => {
     const target = event.target as HTMLSelectElement | null;
     if (!target) {
       return;
     }
-    state.randomMuteCountInBarsIndex = Number(target.value);
-    state.randomMuteConfigured = true;
-    render();
+    setRandomMuteCountInBarsIndex(Number(target.value));
+    closeRandomMuteCountInPanel();
   });
 
   accentBarsSelect.addEventListener("change", (event: Event) => {

@@ -153,9 +153,59 @@
             </button>
             <div class="random-mute-panel" id="random-mute-panel">
               <div class="random-mute-controls">
-                <div class="random-mute-row">
-                  <select id="random-mute-percent" aria-label="Random mute percentage"></select>
+                <div class="random-mute-row random-mute-row--percent">
+                  <div class="wheel-field">
+                    <button
+                      class="wheel-trigger"
+                      id="random-mute-percent-trigger"
+                      type="button"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                    ></button>
+                    <select id="random-mute-percent" aria-label="Random mute percentage"></select>
+                    <div
+                      class="wheel-picker"
+                      id="random-mute-percent-picker"
+                      role="listbox"
+                      aria-label="Random mute percentage"
+                    ></div>
+                  </div>
                   <span class="trainer-separator" aria-hidden="true">%</span>
+                  <div class="random-mute-countin" id="random-mute-countin-controls">
+                    <button
+                      class="random-mute-countin-disclosure"
+                      id="random-mute-countin-disclosure"
+                      type="button"
+                      aria-expanded="false"
+                      aria-controls="random-mute-countin-panel"
+                    >
+                      Count-in
+                    </button>
+                    <div class="random-mute-countin-panel" id="random-mute-countin-panel">
+                      <div class="random-mute-countin-inner">
+                        <div class="wheel-field wheel-field--countin" id="random-mute-countin-field">
+                          <button
+                            class="wheel-trigger"
+                            id="random-mute-countin-trigger"
+                            type="button"
+                            aria-haspopup="listbox"
+                            aria-expanded="false"
+                          ></button>
+                          <select
+                            id="random-mute-countin-bars"
+                            aria-label="Random mute count-in bars"
+                          ></select>
+                          <div
+                            class="wheel-picker"
+                            id="random-mute-countin-picker"
+                            role="listbox"
+                            aria-label="Random mute count-in bars"
+                          ></div>
+                        </div>
+                        <span class="trainer-separator" aria-hidden="true">bars</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <label class="random-mute-option random-mute-option--slider">
                   <span>Ramp speed</span>
@@ -169,14 +219,6 @@
                   />
                   <span class="random-mute-ramp-value" id="random-mute-ramp-value">16 bars</span>
                 </label>
-                <label class="random-mute-option">
-                  <input id="random-mute-countin" type="checkbox" />
-                  Count-in
-                </label>
-                <div class="random-mute-row">
-                  <select id="random-mute-countin-bars" aria-label="Random mute count-in bars"></select>
-                  <span class="trainer-separator" aria-hidden="true">bars</span>
-                </div>
               </div>
             </div>
           </div>
