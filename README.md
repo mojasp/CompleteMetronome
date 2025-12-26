@@ -24,8 +24,7 @@ the output of a computer program: do not seek structure or meaning. I do not
 advocate the use of LLM's - nothing was learned, no knowledge gained in the
 developpment of this software. In a way, i regret this. But I am not a web
 developer, and my previous metronome app introduced pop-up ads. This one
-does not have them.
-
+will never have them.
 
 ## License
 
