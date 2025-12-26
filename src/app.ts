@@ -387,14 +387,20 @@ function render() {
     : "None";
   accentDisclosure.classList.toggle("is-enabled", state.accentEnabled);
   accentDisclosure.classList.toggle("is-disabled", !state.accentEnabled);
-  accentCountInControls.classList.toggle("is-disabled", !state.accentEnabled);
-  accentCountInDisclosure.setAttribute("aria-disabled", String(!state.accentEnabled));
+  const accentCountInDisabled = !state.accentEnabled;
+  accentCountInControls.classList.toggle("is-disabled", accentCountInDisabled);
   const accentCountInBars = ACCENT_COUNTIN_BARS[state.accentCountInBarsIndex];
   accentCountInDisclosure.textContent = state.accentCountInEnabled
     ? `Count-in: ${accentCountInBars} bars`
     : "Count-in";
-  accentCountInDisclosure.classList.toggle("is-enabled", state.accentCountInEnabled);
-  accentCountInDisclosure.classList.toggle("is-disabled", !state.accentCountInEnabled);
+  accentCountInDisclosure.classList.toggle(
+    "is-enabled",
+    state.accentCountInEnabled && !accentCountInDisabled,
+  );
+  accentCountInDisclosure.classList.toggle(
+    "is-disabled",
+    accentCountInDisabled || !state.accentCountInEnabled,
+  );
   updateWheelDisplay();
   layoutGridColumns();
   layoutBeatGridColumns();

@@ -1052,8 +1052,13 @@ select {
 }
 
 .accent-countin.is-disabled {
-  opacity: 0.5;
   pointer-events: none;
+}
+
+.accent-countin.is-disabled .accent-countin-disclosure {
+  background: transparent;
+  border-color: var(--border-muted);
+  color: var(--ink-muted);
 }
 
 .accent-countin.is-open .accent-countin-disclosure {
