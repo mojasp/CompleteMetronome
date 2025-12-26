@@ -643,6 +643,7 @@ select {
 @media (max-width: 720px) {
   body {
     padding: 32px 16px 48px;
+    place-items: start center;
   }
 
   .theme-toggle {
