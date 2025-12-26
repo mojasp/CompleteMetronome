@@ -58,6 +58,13 @@ const accentWheelField = getElement<HTMLDivElement>("accent-wheel-field");
 const accentBarsTrigger = getElement<HTMLButtonElement>("accent-bars-trigger");
 const accentBarsPicker = getElement<HTMLDivElement>("accent-bars-picker");
 const accentControls = getElement<HTMLDivElement>("accent-controls");
+const accentCountInControls = getElement<HTMLDivElement>("accent-countin-controls");
+const accentCountInDisclosure = getElement<HTMLButtonElement>("accent-countin-disclosure");
+const accentCountInPanel = getElement<HTMLDivElement>("accent-countin-panel");
+const accentCountInField = getElement<HTMLDivElement>("accent-countin-field");
+const accentCountInTrigger = getElement<HTMLButtonElement>("accent-countin-trigger");
+const accentCountInPicker = getElement<HTMLDivElement>("accent-countin-picker");
+const accentCountInBarsSelect = getElement<HTMLSelectElement>("accent-countin-bars");
 const accentHost = getElement<HTMLDivElement>("accent-host");
 const accentBlock = getElement<HTMLDivElement>("accent-block");
 const selectors = getElement<HTMLDivElement>("selectors");
@@ -219,6 +226,7 @@ const TRAINER_BARS = Array.from({ length: 12 }, (_, index) => index + 1);
 const TRAINER_BPM_STEPS = [1, 2, 3, 4, 5, 8, 10];
 const TRAINER_SECONDS = Array.from({ length: 36 }, (_, index) => (index + 1) * 10);
 const ACCENT_BARS = Array.from({ length: 63 }, (_, index) => index + 2);
+const ACCENT_COUNTIN_BARS = Array.from({ length: 65 }, (_, index) => index);
 const RANDOM_MUTE_PERCENTS = Array.from({ length: 21 }, (_, index) => index * 5);
 const RANDOM_MUTE_COUNTIN_BARS = Array.from({ length: 65 }, (_, index) => index);
 const BPM_PER_DEGREE = 0.4;
@@ -250,6 +258,8 @@ type MetronomeState = {
   accentBarsIndex: number;
   accentEnabled: boolean;
   accentConfigured: boolean;
+  accentCountInEnabled: boolean;
+  accentCountInBarsIndex: number;
   randomMutePercentIndex: number;
   randomMuteRampSpeed: number;
   randomMuteCountInEnabled: boolean;
@@ -281,6 +291,8 @@ const state: MetronomeState = {
   accentBarsIndex: ACCENT_BARS.indexOf(12),
   accentEnabled: false,
   accentConfigured: false,
+  accentCountInEnabled: true,
+  accentCountInBarsIndex: ACCENT_COUNTIN_BARS.indexOf(2),
   randomMutePercentIndex: RANDOM_MUTE_PERCENTS.indexOf(35),
   randomMuteRampSpeed: 100,
   randomMuteCountInEnabled: true,
@@ -311,6 +323,7 @@ let wheelPickers: Array<{
   setOptions: (options: Array<{ label: string }>) => void;
 }> = [];
 let accentWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
+let accentCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let randomMuteCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let subdivisionWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 
@@ -336,6 +349,9 @@ function render() {
   }
   if (randomMuteCountInWheelPicker) {
     randomMuteCountInWheelPicker.sync(!randomMuteCountInWheelPicker.isScrolling());
+  }
+  if (accentCountInWheelPicker) {
+    accentCountInWheelPicker.sync(!accentCountInWheelPicker.isScrolling());
   }
   const trainerBars = TRAINER_BARS[state.trainerBarsIndex];
   const trainerStep = TRAINER_BPM_STEPS[state.trainerBpmIndex];
@@ -371,6 +387,14 @@ function render() {
     : "None";
   accentDisclosure.classList.toggle("is-enabled", state.accentEnabled);
   accentDisclosure.classList.toggle("is-disabled", !state.accentEnabled);
+  accentCountInControls.classList.toggle("is-disabled", !state.accentEnabled);
+  accentCountInDisclosure.setAttribute("aria-disabled", String(!state.accentEnabled));
+  const accentCountInBars = ACCENT_COUNTIN_BARS[state.accentCountInBarsIndex];
+  accentCountInDisclosure.textContent = state.accentCountInEnabled
+    ? `Count-in: ${accentCountInBars} bars`
+    : "Count-in";
+  accentCountInDisclosure.classList.toggle("is-enabled", state.accentCountInEnabled);
+  accentCountInDisclosure.classList.toggle("is-disabled", !state.accentCountInEnabled);
   updateWheelDisplay();
   layoutGridColumns();
   layoutBeatGridColumns();
@@ -527,6 +551,16 @@ function setAccentBarsIndex(nextIndex: number, syncPicker = true) {
   state.accentBarsIndex = clamped;
   state.accentConfigured = true;
   ui.setSelectValue(accentBarsSelect, clamped);
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function setAccentCountInBarsIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(ACCENT_COUNTIN_BARS.length - 1, nextIndex));
+  state.accentCountInBarsIndex = clamped;
+  ui.setSelectValue(accentCountInBarsSelect, clamped);
   if (syncPicker) {
     wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
   }
@@ -914,8 +948,15 @@ async function startPlayback() {
       if (tickIndex === 0) {
         state.barCount += 1;
         if (state.accentEnabled && baseState !== "A") {
+          const countInBars = state.accentCountInEnabled
+            ? ACCENT_COUNTIN_BARS[state.accentCountInBarsIndex]
+            : 0;
+          const accentBarIndex = state.barCount - countInBars;
+          if (accentBarIndex <= 0) {
+            return baseState;
+          }
           const accentEvery = ACCENT_BARS[state.accentBarsIndex];
-          const shouldAccent = (state.barCount - 1) % accentEvery === 0;
+          const shouldAccent = (accentBarIndex - 1) % accentEvery === 0;
           resolvedState = shouldAccent ? "A" : baseState;
         }
       }
@@ -1118,6 +1159,21 @@ function openAccentPanel() {
   accentWheelPicker?.open();
 }
 
+function closeAccentCountInPanel() {
+  accentCountInPanel.classList.remove("is-open");
+  accentCountInDisclosure.setAttribute("aria-expanded", "false");
+  accentCountInControls.classList.remove("is-open");
+  accentCountInWheelPicker?.close();
+}
+
+function openAccentCountInPanel() {
+  wheelPickers.forEach((picker) => picker.close());
+  accentCountInPanel.classList.add("is-open");
+  accentCountInDisclosure.setAttribute("aria-expanded", "true");
+  accentCountInControls.classList.add("is-open");
+  accentCountInWheelPicker?.open();
+}
+
 function closeRandomMuteCountInPanel() {
   randomMuteCountInPanel.classList.remove("is-open");
   randomMuteCountInDisclosure.setAttribute("aria-expanded", "false");
@@ -1270,6 +1326,10 @@ function setupControls() {
     RANDOM_MUTE_COUNTIN_BARS.map((value) => ({ label: String(value) })),
   );
   ui.populateSelect(
+    accentCountInBarsSelect,
+    ACCENT_COUNTIN_BARS.map((value) => ({ label: String(value) })),
+  );
+  ui.populateSelect(
     accentBarsSelect,
     ACCENT_BARS.map((value) => ({ label: String(value) })),
   );
@@ -1283,6 +1343,7 @@ function setupControls() {
   ui.setSelectValue(trainerSecondsBpmSelect, state.trainerSecondsBpmIndex);
   ui.setSelectValue(randomMutePercentSelect, state.randomMutePercentIndex);
   ui.setSelectValue(randomMuteCountInBarsSelect, state.randomMuteCountInBarsIndex);
+  ui.setSelectValue(accentCountInBarsSelect, state.accentCountInBarsIndex);
   ui.setSelectValue(accentBarsSelect, state.accentBarsIndex);
 
   subdivisionWheelPicker = createWheelPicker({
@@ -1387,9 +1448,23 @@ function setupControls() {
       closeRandomMuteCountInPanel();
     },
   });
+
+  accentCountInWheelPicker = createWheelPicker({
+    field: accentCountInField,
+    trigger: accentCountInTrigger,
+    picker: accentCountInPicker,
+    options: ACCENT_COUNTIN_BARS.map((value) => ({ label: String(value) })),
+    getIndex: () => state.accentCountInBarsIndex,
+    setIndex: setAccentCountInBarsIndex,
+    bindTrigger: false,
+    onSelect: () => {
+      closeAccentCountInPanel();
+    },
+  });
   window.addEventListener("resize", () => {
     wheelPickers.forEach((picker) => picker.resize());
     accentWheelPicker?.resize();
+    accentCountInWheelPicker?.resize();
     randomMuteCountInWheelPicker?.resize();
   });
 
@@ -1541,8 +1616,26 @@ function setupControls() {
     render();
   });
 
+  accentCountInDisclosure.addEventListener("click", () => {
+    if (!state.accentEnabled) {
+      return;
+    }
+    if (state.accentCountInEnabled) {
+      state.accentCountInEnabled = false;
+      closeAccentCountInPanel();
+      render();
+      return;
+    }
+    state.accentCountInEnabled = true;
+    openAccentCountInPanel();
+    render();
+  });
+
   bindClickOutsideClose(accentPanel, accentDisclosure, () => {
     closeAccentPanel();
+  });
+  bindClickOutsideClose(accentCountInPanel, accentCountInDisclosure, () => {
+    closeAccentCountInPanel();
   });
   // Keep trainer/random mute panels open unless explicitly toggled off.
   bindClickOutsideClose(randomMuteCountInPanel, randomMuteCountInDisclosure, () => {
@@ -1655,6 +1748,15 @@ function setupControls() {
     }
     setAccentBarsIndex(Number(target.value));
     closeAccentPanel();
+  });
+
+  accentCountInBarsSelect.addEventListener("change", (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target) {
+      return;
+    }
+    setAccentCountInBarsIndex(Number(target.value));
+    closeAccentCountInPanel();
   });
 
   subdivisionGrid.addEventListener("click", (event: MouseEvent) => {

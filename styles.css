@@ -1044,6 +1044,86 @@ select {
   height: 96px;
 }
 
+.accent-countin {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  position: relative;
+}
+
+.accent-countin.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.accent-countin.is-open .accent-countin-disclosure {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.accent-countin-disclosure {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-family: var(--font-display);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.accent-countin-disclosure.is-enabled {
+  background: color-mix(in srgb, var(--accent-2) 45%, var(--paper));
+  border-color: color-mix(in srgb, var(--accent-2) 60%, var(--paper));
+  color: var(--ink);
+}
+
+.accent-countin-disclosure.is-disabled {
+  border-color: var(--border-muted);
+  color: var(--ink-muted);
+}
+
+.accent-countin-panel {
+  display: none;
+}
+
+.accent-countin-panel.is-open {
+  display: grid;
+  gap: 6px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+}
+
+.accent-countin-inner {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+.accent-countin-inner .wheel-field--accent-countin {
+  min-width: 44px;
+}
+
+.accent-countin-inner .wheel-field--accent-countin .wheel-trigger,
+.accent-countin-inner .wheel-field--accent-countin select {
+  display: none;
+}
+
+.accent-countin-inner .wheel-field--accent-countin.is-open .wheel-picker {
+  display: block;
+  position: static;
+}
+
+.accent-countin-inner .wheel-picker {
+  height: 112px;
+}
+
 .accent-panel-inner select {
   padding: 6px 8px;
   border-radius: 10px;
