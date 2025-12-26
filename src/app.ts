@@ -41,7 +41,10 @@ const selectors = getElement<HTMLDivElement>("selectors");
 const themeToggle = getElement<HTMLButtonElement>("theme-toggle");
 const timeSignatureNumeratorSelect = getElement<HTMLSelectElement>("time-signature-numerator");
 const timeSignatureDenominatorSelect = getElement<HTMLSelectElement>("time-signature-denominator");
+const numeratorPicker = getElement<HTMLDivElement>("numerator-picker");
+const denominatorPicker = getElement<HTMLDivElement>("denominator-picker");
 const subdivisionSelect = getElement<HTMLSelectElement>("subdivision");
+const subdivisionPicker = getElement<HTMLDivElement>("subdivision-picker");
 const subdivisionGrid = getElement<HTMLDivElement>("subdivision-grid");
 
 type TimeSignature = {
@@ -186,6 +189,11 @@ const ui = createUI({
 
 const audio = createMetronomeAudio();
 let trainerIntervalId: ReturnType<typeof setInterval> | null = null;
+let wheelPickers: Array<{
+  sync: (shouldScroll: boolean) => void;
+  resize: () => void;
+  isScrolling: () => boolean;
+}> = [];
 
 function totalSubdivisions() {
   return (
@@ -206,6 +214,7 @@ function initSoundStates() {
 function render() {
   ui.setTempoDisplay(state.bpm);
   ui.setPlayState(state.isPlaying);
+  wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
   const trainerBars = TRAINER_BARS[state.trainerBarsIndex];
   const trainerStep = TRAINER_BPM_STEPS[state.trainerBpmIndex];
   trainerDisclosure.textContent = state.trainerConfigured
@@ -244,6 +253,184 @@ function render() {
     soundStates: state.soundStates,
     activeIndex: state.activeIndex,
   });
+}
+
+function setTimeSignatureNumeratorIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(TIME_SIGNATURES.length - 1, nextIndex));
+  state.timeSignatureNumeratorIndex = clamped;
+  ui.setSelectValue(timeSignatureNumeratorSelect, clamped);
+  initSoundStates();
+  updateAudioSettings();
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function setTimeSignatureDenominatorIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(DENOMINATORS.length - 1, nextIndex));
+  state.timeSignatureDenominatorIndex = clamped;
+  ui.setSelectValue(timeSignatureDenominatorSelect, clamped);
+  initSoundStates();
+  updateAudioSettings();
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function setSubdivisionIndex(nextIndex: number, syncPicker = true) {
+  const clamped = Math.max(0, Math.min(SUBDIVISIONS.length - 1, nextIndex));
+  state.subdivisionIndex = clamped;
+  ui.setSelectValue(subdivisionSelect, clamped);
+  initSoundStates();
+  updateAudioSettings();
+  if (syncPicker) {
+    wheelPickers.forEach((picker) => picker.sync(!picker.isScrolling()));
+  }
+  render();
+}
+
+function createWheelPicker({
+  picker,
+  options,
+  getIndex,
+  setIndex,
+}: {
+  picker: HTMLDivElement;
+  options: Array<{ label: string }>;
+  getIndex: () => number;
+  setIndex: (index: number, syncPicker?: boolean) => void;
+}) {
+  let items: HTMLButtonElement[] = [];
+  let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+  let isScrolling = false;
+  let spacerTop: HTMLDivElement | null = null;
+  let spacerBottom: HTMLDivElement | null = null;
+
+  const scrollToIndex = (index: number) => {
+    const item = items[index];
+    if (!item) {
+      return;
+    }
+    const target = item.offsetTop + item.offsetHeight / 2 - picker.clientHeight / 2;
+    picker.scrollTop = target;
+  };
+
+  const sync = (shouldScroll: boolean) => {
+    if (!items.length) {
+      return;
+    }
+    const activeIndex = getIndex();
+    items.forEach((item, index) => {
+      const isActive = index === activeIndex;
+      item.classList.toggle("is-active", isActive);
+      item.setAttribute("aria-selected", isActive ? "true" : "false");
+    });
+    if (!shouldScroll) {
+      return;
+    }
+    scrollToIndex(activeIndex);
+  };
+
+  const resize = () => {
+    if (!spacerTop || !spacerBottom || !items.length) {
+      return;
+    }
+    const itemHeight = items[0].getBoundingClientRect().height;
+    const pickerHeight = picker.getBoundingClientRect().height;
+    const spacerHeight = Math.max(0, (pickerHeight - itemHeight) / 2);
+    spacerTop.style.height = `${spacerHeight}px`;
+    spacerBottom.style.height = `${spacerHeight}px`;
+  };
+
+  picker.innerHTML = "";
+  spacerTop = document.createElement("div");
+  spacerTop.className = "wheel-picker-spacer";
+  picker.appendChild(spacerTop);
+
+  items = options.map((option, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "wheel-picker-item";
+    button.textContent = option.label;
+    button.dataset.index = String(index);
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", "false");
+    picker.appendChild(button);
+    return button;
+  });
+
+  spacerBottom = document.createElement("div");
+  spacerBottom.className = "wheel-picker-spacer";
+  picker.appendChild(spacerBottom);
+
+  requestAnimationFrame(() => {
+    resize();
+    scrollToIndex(getIndex());
+    sync(false);
+  });
+
+  picker.addEventListener("click", (event: MouseEvent) => {
+    const target = event.target;
+    if (!(target instanceof HTMLButtonElement)) {
+      return;
+    }
+    const index = Number(target.dataset.index);
+    if (!Number.isFinite(index)) {
+      return;
+    }
+    setIndex(index);
+  });
+
+  picker.addEventListener("scroll", () => {
+    isScrolling = true;
+    if (scrollTimeout) {
+      clearTimeout(scrollTimeout);
+    }
+    scrollTimeout = setTimeout(() => {
+      isScrolling = false;
+      sync(true);
+    }, 120);
+
+    const center = picker.scrollTop + picker.clientHeight / 2;
+    let bestIndex = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    items.forEach((item, index) => {
+      const itemCenter = item.offsetTop + item.offsetHeight / 2;
+      const distance = Math.abs(center - itemCenter);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    });
+    if (bestIndex !== getIndex()) {
+      setIndex(bestIndex, false);
+    }
+  });
+
+  picker.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+  });
+
+  let lastTouchEnd = 0;
+  picker.addEventListener(
+    "touchend",
+    (event: TouchEvent) => {
+      const now = performance.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    },
+    { passive: false },
+  );
+
+  return {
+    sync,
+    resize,
+    isScrolling: () => isScrolling,
+  };
 }
 
 function updateAudioSettings() {
@@ -672,6 +859,30 @@ function setupControls() {
   ui.setSelectValue(randomMuteCountInBarsSelect, state.randomMuteCountInBarsIndex);
   ui.setSelectValue(accentBarsSelect, state.accentBarsIndex);
 
+  wheelPickers = [
+    createWheelPicker({
+      picker: numeratorPicker,
+      options: TIME_SIGNATURES,
+      getIndex: () => state.timeSignatureNumeratorIndex,
+      setIndex: setTimeSignatureNumeratorIndex,
+    }),
+    createWheelPicker({
+      picker: denominatorPicker,
+      options: DENOMINATORS.map((value) => ({ label: String(value) })),
+      getIndex: () => state.timeSignatureDenominatorIndex,
+      setIndex: setTimeSignatureDenominatorIndex,
+    }),
+    createWheelPicker({
+      picker: subdivisionPicker,
+      options: SUBDIVISIONS,
+      getIndex: () => state.subdivisionIndex,
+      setIndex: setSubdivisionIndex,
+    }),
+  ];
+  window.addEventListener("resize", () => {
+    wheelPickers.forEach((picker) => picker.resize());
+  });
+
   let themePreference = readThemePreference();
   applyThemePreference(themePreference);
   updateThemeToggleLabel(themePreference);
@@ -815,10 +1026,7 @@ function setupControls() {
     if (!target) {
       return;
     }
-    state.timeSignatureNumeratorIndex = Number(target.value);
-    initSoundStates();
-    updateAudioSettings();
-    render();
+    setTimeSignatureNumeratorIndex(Number(target.value));
   });
 
   timeSignatureDenominatorSelect.addEventListener("change", (event: Event) => {
@@ -826,10 +1034,7 @@ function setupControls() {
     if (!target) {
       return;
     }
-    state.timeSignatureDenominatorIndex = Number(target.value);
-    initSoundStates();
-    updateAudioSettings();
-    render();
+    setTimeSignatureDenominatorIndex(Number(target.value));
   });
 
   subdivisionSelect.addEventListener("change", (event: Event) => {
@@ -837,10 +1042,7 @@ function setupControls() {
     if (!target) {
       return;
     }
-    state.subdivisionIndex = Number(target.value);
-    initSoundStates();
-    updateAudioSettings();
-    render();
+    setSubdivisionIndex(Number(target.value));
   });
 
   soundProfileSelect.addEventListener("change", (event: Event) => {

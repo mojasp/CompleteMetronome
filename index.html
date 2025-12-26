@@ -119,15 +119,42 @@
           <label class="select-field">
             <span class="label">Time signature</span>
             <div class="time-signature-controls">
-              <select id="time-signature-numerator" aria-label="Time signature numerator"></select>
+              <div class="wheel-field">
+                <select id="time-signature-numerator" aria-label="Time signature numerator"></select>
+                <div
+                  class="wheel-picker"
+                  id="numerator-picker"
+                  role="listbox"
+                  aria-label="Time signature numerator"
+                ></div>
+              </div>
               <span class="time-signature-separator" aria-hidden="true">/</span>
-              <select id="time-signature-denominator" aria-label="Time signature denominator"></select>
+              <div class="wheel-field">
+                <select
+                  id="time-signature-denominator"
+                  aria-label="Time signature denominator"
+                ></select>
+                <div
+                  class="wheel-picker"
+                  id="denominator-picker"
+                  role="listbox"
+                  aria-label="Time signature denominator"
+                ></div>
+              </div>
             </div>
           </label>
 
           <label class="select-field">
             <span class="label">Subdivision</span>
-            <select id="subdivision"></select>
+            <div class="wheel-field">
+              <select id="subdivision"></select>
+              <div
+                class="wheel-picker"
+                id="subdivision-picker"
+                role="listbox"
+                aria-label="Subdivision"
+              ></div>
+            </div>
           </label>
 
           <label class="select-field select-field--sound">
