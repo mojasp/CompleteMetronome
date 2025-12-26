@@ -120,6 +120,13 @@
             <span class="label">Time signature</span>
             <div class="time-signature-controls">
               <div class="wheel-field">
+                <button
+                  class="wheel-trigger"
+                  id="numerator-trigger"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                ></button>
                 <select id="time-signature-numerator" aria-label="Time signature numerator"></select>
                 <div
                   class="wheel-picker"
@@ -130,6 +137,13 @@
               </div>
               <span class="time-signature-separator" aria-hidden="true">/</span>
               <div class="wheel-field">
+                <button
+                  class="wheel-trigger"
+                  id="denominator-trigger"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                ></button>
                 <select
                   id="time-signature-denominator"
                   aria-label="Time signature denominator"
@@ -147,6 +161,13 @@
           <label class="select-field">
             <span class="label">Subdivision</span>
             <div class="wheel-field">
+              <button
+                class="wheel-trigger"
+                id="subdivision-trigger"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              ></button>
               <select id="subdivision"></select>
               <div
                 class="wheel-picker"

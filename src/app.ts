@@ -45,6 +45,9 @@ const numeratorPicker = getElement<HTMLDivElement>("numerator-picker");
 const denominatorPicker = getElement<HTMLDivElement>("denominator-picker");
 const subdivisionSelect = getElement<HTMLSelectElement>("subdivision");
 const subdivisionPicker = getElement<HTMLDivElement>("subdivision-picker");
+const numeratorTrigger = getElement<HTMLButtonElement>("numerator-trigger");
+const denominatorTrigger = getElement<HTMLButtonElement>("denominator-trigger");
+const subdivisionTrigger = getElement<HTMLButtonElement>("subdivision-trigger");
 const subdivisionGrid = getElement<HTMLDivElement>("subdivision-grid");
 
 type TimeSignature = {
@@ -193,6 +196,9 @@ let wheelPickers: Array<{
   sync: (shouldScroll: boolean) => void;
   resize: () => void;
   isScrolling: () => boolean;
+  close: () => void;
+  isOpen: () => boolean;
+  contains: (target: Node) => boolean;
 }> = [];
 
 function totalSubdivisions() {
@@ -292,11 +298,15 @@ function setSubdivisionIndex(nextIndex: number, syncPicker = true) {
 }
 
 function createWheelPicker({
+  field,
+  trigger,
   picker,
   options,
   getIndex,
   setIndex,
 }: {
+  field: HTMLDivElement;
+  trigger: HTMLButtonElement;
   picker: HTMLDivElement;
   options: Array<{ label: string }>;
   getIndex: () => number;
@@ -307,6 +317,7 @@ function createWheelPicker({
   let isScrolling = false;
   let spacerTop: HTMLDivElement | null = null;
   let spacerBottom: HTMLDivElement | null = null;
+  let isOpen = false;
 
   const scrollToIndex = (index: number) => {
     const item = items[index];
@@ -322,6 +333,7 @@ function createWheelPicker({
       return;
     }
     const activeIndex = getIndex();
+    trigger.textContent = options[activeIndex]?.label ?? "";
     items.forEach((item, index) => {
       const isActive = index === activeIndex;
       item.classList.toggle("is-active", isActive);
@@ -381,6 +393,7 @@ function createWheelPicker({
       return;
     }
     setIndex(index);
+    close();
   });
 
   picker.addEventListener("scroll", () => {
@@ -426,10 +439,38 @@ function createWheelPicker({
     { passive: false },
   );
 
+  const open = () => {
+    isOpen = true;
+    field.classList.add("is-open");
+    trigger.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => {
+      resize();
+      sync(true);
+    });
+  };
+
+  const close = () => {
+    isOpen = false;
+    field.classList.remove("is-open");
+    trigger.setAttribute("aria-expanded", "false");
+  };
+
+  trigger.addEventListener("click", () => {
+    if (isOpen) {
+      close();
+      return;
+    }
+    wheelPickers.forEach((entry) => entry.close());
+    open();
+  });
+
   return {
     sync,
     resize,
     isScrolling: () => isScrolling,
+    close,
+    isOpen: () => isOpen,
+    contains: (target: Node) => field.contains(target),
   };
 }
 
@@ -861,18 +902,24 @@ function setupControls() {
 
   wheelPickers = [
     createWheelPicker({
+      field: numeratorPicker.parentElement as HTMLDivElement,
+      trigger: numeratorTrigger,
       picker: numeratorPicker,
       options: TIME_SIGNATURES,
       getIndex: () => state.timeSignatureNumeratorIndex,
       setIndex: setTimeSignatureNumeratorIndex,
     }),
     createWheelPicker({
+      field: denominatorPicker.parentElement as HTMLDivElement,
+      trigger: denominatorTrigger,
       picker: denominatorPicker,
       options: DENOMINATORS.map((value) => ({ label: String(value) })),
       getIndex: () => state.timeSignatureDenominatorIndex,
       setIndex: setTimeSignatureDenominatorIndex,
     }),
     createWheelPicker({
+      field: subdivisionPicker.parentElement as HTMLDivElement,
+      trigger: subdivisionTrigger,
       picker: subdivisionPicker,
       options: SUBDIVISIONS,
       getIndex: () => state.subdivisionIndex,
@@ -1185,6 +1232,22 @@ function setupControls() {
     } else if (event.key === "K") {
       adjustTempo(5);
     }
+  });
+
+  document.addEventListener("click", (event: MouseEvent) => {
+    const target = event.target as Node | null;
+    if (!target) {
+      return;
+    }
+    wheelPickers.forEach((picker) => {
+      if (!picker.isOpen()) {
+        return;
+      }
+      if (picker.contains(target)) {
+        return;
+      }
+      picker.close();
+    });
   });
 }
 

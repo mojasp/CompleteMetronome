@@ -479,13 +479,35 @@ h1 {
 
 .time-signature-controls {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(70px, 1fr) auto minmax(70px, 1fr);
   align-items: center;
   gap: 8px;
 }
 
+.time-signature-controls .wheel-field {
+  min-width: 70px;
+}
+
 .wheel-field {
   position: relative;
+  display: grid;
+  gap: 8px;
+}
+
+.wheel-trigger {
+  display: none;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .wheel-picker {
@@ -495,7 +517,7 @@ h1 {
   overflow-y: auto;
   scroll-snap-type: y mandatory;
   scroll-padding-block: 0;
-  padding: 28px 0;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--paper);
@@ -534,6 +556,9 @@ h1 {
   font-size: 0.88rem;
   cursor: pointer;
   width: calc(100% - 24px);
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .wheel-picker-item.is-active {
@@ -802,8 +827,25 @@ select {
     display: none;
   }
 
-  .wheel-picker {
+  .wheel-trigger {
     display: block;
+  }
+
+  .wheel-picker {
+    display: none;
+  }
+
+  .wheel-field.is-open .wheel-picker {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+  }
+
+  .wheel-field.is-open .wheel-trigger {
+    visibility: hidden;
   }
 
   .subdivision-grid {
