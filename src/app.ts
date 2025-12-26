@@ -94,7 +94,6 @@ const SOUND_PROFILES: SoundProfileOption[] = [
 
 const BPM_MIN = 20;
 const BPM_MAX = 300;
-const BPM_PER_DEGREE = 0.25;
 const TRAINER_BARS = Array.from({ length: 12 }, (_, index) => index + 1);
 const TRAINER_BPM_STEPS = [1, 2, 3, 4, 5, 8, 10];
 const TRAINER_SECONDS = Array.from({ length: 36 }, (_, index) => (index + 1) * 10);
@@ -102,6 +101,7 @@ const ACCENT_BARS = Array.from({ length: 63 }, (_, index) => index + 2);
 const RANDOM_MUTE_PERCENTS = Array.from({ length: 21 }, (_, index) => index * 5);
 const RANDOM_MUTE_COUNTIN_BARS = Array.from({ length: 65 }, (_, index) => index);
 const RANDOM_MUTE_RAMP_BARS = 16;
+const BPM_PER_DEGREE = 0.4;
 const THEME_PREFERENCE_KEY = "theme-preference";
 
 type MetronomeState = {
@@ -403,18 +403,11 @@ function angleFromPointer(event: PointerEvent, element: HTMLElement) {
   return (angle + 450) % 360;
 }
 
-function normalizeAngleDelta(delta: number) {
-  if (delta > 180) {
-    return delta - 360;
-  }
-  if (delta < -180) {
-    return delta + 360;
-  }
-  return delta;
-}
+let wheelAngle = 0;
 
 function updateWheelDisplay() {
   tempoWheel.setAttribute("aria-valuenow", String(state.bpm));
+  tempoWheel.style.setProperty("--wheel-angle", `${wheelAngle}deg`);
 }
 
 function readThemePreference(): ThemePreference {
@@ -479,12 +472,19 @@ function attachWheelControls() {
     }
     event.preventDefault();
     const angle = angleFromPointer(event, tempoWheel);
-    const delta = normalizeAngleDelta(angle - lastAngle);
-    lastAngle = angle;
-    if (Math.abs(delta) < 0.1) {
-      return;
+    let delta = angle - lastAngle;
+    if (delta > 180) {
+      delta -= 360;
+    } else if (delta < -180) {
+      delta += 360;
     }
-    setTempo(state.bpm + Math.round(delta * BPM_PER_DEGREE));
+    lastAngle = angle;
+    const bpmDelta = Math.round(delta * BPM_PER_DEGREE);
+    if (bpmDelta !== 0) {
+      setTempo(state.bpm + bpmDelta);
+      wheelAngle += bpmDelta / BPM_PER_DEGREE;
+      updateWheelDisplay();
+    }
   };
 
   const handlePointerUp = (event: PointerEvent) => {
@@ -499,6 +499,7 @@ function attachWheelControls() {
     isActive = true;
     tempoWheel.setPointerCapture(event.pointerId);
     lastAngle = angleFromPointer(event, tempoWheel);
+    wheelAngle = (wheelAngle % 360 + 360) % 360;
     handlePointer(event);
   });
   tempoWheel.addEventListener("pointermove", handlePointer);
