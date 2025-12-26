@@ -18,14 +18,15 @@ const DEFAULT_SOUND_PROFILE: SoundProfile = {
   regular: { type: "triangle", frequency: 760, volume: 0.13, decay: 0.055, duration: 0.07 },
 };
 
-let loudClickCurve: Float32Array | null = null;
+let loudClickCurve: Float32Array<ArrayBuffer> | null = null;
 
 function getLoudClickCurve() {
   if (loudClickCurve) {
     return loudClickCurve;
   }
   const samples = 1024;
-  const curve = new Float32Array(samples);
+  const curveBuffer = new ArrayBuffer(samples * Float32Array.BYTES_PER_ELEMENT);
+  const curve = new Float32Array(curveBuffer);
   const amount = 2.2;
   for (let i = 0; i < samples; i += 1) {
     const x = (i * 2) / (samples - 1) - 1;
