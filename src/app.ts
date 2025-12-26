@@ -1374,8 +1374,7 @@ function setupControls() {
   bindClickOutsideClose(accentPanel, accentDisclosure, () => {
     closeAccentPanel();
   });
-  bindClickOutsideClose(trainerPanel, trainerDisclosure);
-  bindClickOutsideClose(randomMutePanel, randomMuteDisclosure);
+  // Keep trainer/random mute panels open unless explicitly toggled off.
   bindClickOutsideClose(randomMuteCountInPanel, randomMuteCountInDisclosure, () => {
     closeRandomMuteCountInPanel();
   });
