@@ -64,7 +64,7 @@ type SoundProfileOption = SoundProfile & { label: string };
 
 const MAX_NUMERATOR = 16;
 const NUMERATORS = Array.from({ length: MAX_NUMERATOR - 1 }, (_, index) => index + 2);
-const DENOMINATORS = [1, 2, 4, 8, 16];
+const DENOMINATORS = [2, 4, 8, 16];
 const TIME_SIGNATURES: TimeSignature[] = NUMERATORS.map((beats) => ({
   label: String(beats),
   beatsPerBar: beats,
