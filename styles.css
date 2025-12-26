@@ -496,6 +496,21 @@ h1 {
   font-family: var(--font-display);
 }
 
+.random-mute-option--slider {
+  gap: 10px;
+}
+
+.random-mute-option--slider input[type="range"] {
+  flex: 1;
+}
+
+.random-mute-ramp-value {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  min-width: 64px;
+  text-align: right;
+}
+
 .trainer-separator {
   font-size: 0.8rem;
   color: var(--ink-soft);
@@ -581,9 +596,12 @@ select {
 }
 
 .subdivision-grid {
+  --cell-size: clamp(42px, 7vw, 68px);
+  --grid-columns: 4;
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+  grid-template-columns: repeat(var(--grid-columns), var(--cell-size));
+  justify-content: center;
 }
 
 .subdivision-cell {

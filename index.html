@@ -91,9 +91,17 @@
                 <select id="random-mute-percent" aria-label="Random mute percentage"></select>
                 <span class="trainer-separator" aria-hidden="true">%</span>
               </div>
-              <label class="random-mute-option">
-                <input id="random-mute-gradual" type="checkbox" />
-                Gradual
+              <label class="random-mute-option random-mute-option--slider">
+                <span>Ramp speed</span>
+                <input
+                  id="random-mute-ramp"
+                  type="range"
+                  min="1"
+                  max="100"
+                  step="1"
+                  value="100"
+                />
+                <span class="random-mute-ramp-value" id="random-mute-ramp-value">16 bars</span>
               </label>
               <label class="random-mute-option">
                 <input id="random-mute-countin" type="checkbox" />

@@ -27,7 +27,8 @@ const trainerSecondsBpmSelect = getElement<HTMLSelectElement>("trainer-seconds-b
 const randomMuteDisclosure = getElement<HTMLButtonElement>("random-mute-disclosure");
 const randomMutePanel = getElement<HTMLDivElement>("random-mute-panel");
 const randomMutePercentSelect = getElement<HTMLSelectElement>("random-mute-percent");
-const randomMuteGradualToggle = getElement<HTMLInputElement>("random-mute-gradual");
+const randomMuteRampInput = getElement<HTMLInputElement>("random-mute-ramp");
+const randomMuteRampValue = getElement<HTMLElement>("random-mute-ramp-value");
 const randomMuteCountInToggle = getElement<HTMLInputElement>("random-mute-countin");
 const randomMuteCountInBarsSelect = getElement<HTMLSelectElement>("random-mute-countin-bars");
 const accentDisclosure = getElement<HTMLButtonElement>("accent-disclosure");
@@ -100,7 +101,6 @@ const TRAINER_SECONDS = Array.from({ length: 36 }, (_, index) => (index + 1) * 1
 const ACCENT_BARS = Array.from({ length: 63 }, (_, index) => index + 2);
 const RANDOM_MUTE_PERCENTS = Array.from({ length: 21 }, (_, index) => index * 5);
 const RANDOM_MUTE_COUNTIN_BARS = Array.from({ length: 65 }, (_, index) => index);
-const RANDOM_MUTE_RAMP_BARS = 16;
 const BPM_PER_DEGREE = 0.4;
 const THEME_PREFERENCE_KEY = "theme-preference";
 
@@ -125,7 +125,7 @@ type MetronomeState = {
   accentEnabled: boolean;
   accentConfigured: boolean;
   randomMutePercentIndex: number;
-  randomMuteGradual: boolean;
+  randomMuteRampSpeed: number;
   randomMuteCountInEnabled: boolean;
   randomMuteCountInBarsIndex: number;
   randomMuteEnabled: boolean;
@@ -154,10 +154,10 @@ const state: MetronomeState = {
   accentBarsIndex: ACCENT_BARS.indexOf(12),
   accentEnabled: false,
   accentConfigured: false,
-  randomMutePercentIndex: 2,
-  randomMuteGradual: false,
-  randomMuteCountInEnabled: false,
-  randomMuteCountInBarsIndex: 0,
+  randomMutePercentIndex: RANDOM_MUTE_PERCENTS.indexOf(35),
+  randomMuteRampSpeed: 100,
+  randomMuteCountInEnabled: true,
+  randomMuteCountInBarsIndex: RANDOM_MUTE_COUNTIN_BARS.indexOf(2),
   randomMuteEnabled: false,
   randomMuteConfigured: false,
 };
@@ -212,7 +212,9 @@ function render() {
   randomMuteDisclosure.classList.toggle("is-enabled", state.randomMuteEnabled);
   randomMuteDisclosure.classList.toggle("is-disabled", !state.randomMuteEnabled);
   updateRandomMuteVisual();
-  randomMuteGradualToggle.checked = state.randomMuteGradual;
+  const rampBars = rampBarsFromSpeed(state.randomMuteRampSpeed);
+  randomMuteRampInput.value = String(state.randomMuteRampSpeed);
+  randomMuteRampValue.textContent = rampBars <= 0 ? "Immediate" : `${rampBars} bars`;
   randomMuteCountInToggle.checked = state.randomMuteCountInEnabled;
   randomMuteCountInBarsSelect.disabled = !state.randomMuteCountInEnabled;
   const accentBars = ACCENT_BARS[state.accentBarsIndex];
@@ -222,6 +224,7 @@ function render() {
   accentDisclosure.classList.toggle("is-enabled", state.accentEnabled);
   accentDisclosure.classList.toggle("is-disabled", !state.accentEnabled);
   updateWheelDisplay();
+  layoutGridColumns();
   ui.renderSubdivisionGrid({
     totalSubdivisions: totalSubdivisions(),
     subdivisionsPerBeat: SUBDIVISIONS[state.subdivisionIndex].perBeat,
@@ -243,7 +246,11 @@ function updateAudioSettings() {
 }
 
 function randomMuteRampProgress() {
-  if (!state.randomMuteEnabled || !state.randomMuteGradual) {
+  if (!state.randomMuteEnabled) {
+    return null;
+  }
+  const rampBars = rampBarsFromSpeed(state.randomMuteRampSpeed);
+  if (rampBars <= 0) {
     return null;
   }
   let barsElapsed = state.barCount;
@@ -254,7 +261,7 @@ function randomMuteRampProgress() {
     }
     barsElapsed -= countInBars;
   }
-  return Math.min(1, Math.max(0, barsElapsed / RANDOM_MUTE_RAMP_BARS));
+  return Math.min(1, Math.max(0, barsElapsed / rampBars));
 }
 
 function updateRandomMuteVisual() {
@@ -281,11 +288,12 @@ function currentRandomMuteProbability() {
     }
     barsElapsed -= countInBars;
   }
-  if (state.randomMuteGradual) {
-    const rampFactor = Math.min(1, Math.max(0, barsElapsed / RANDOM_MUTE_RAMP_BARS));
-    return target * rampFactor;
+  const rampBars = rampBarsFromSpeed(state.randomMuteRampSpeed);
+  if (rampBars <= 0) {
+    return target;
   }
-  return target;
+  const rampFactor = Math.min(1, Math.max(0, barsElapsed / rampBars));
+  return target * rampFactor;
 }
 
 function stopTrainerInterval() {
@@ -408,6 +416,25 @@ let wheelAngle = 0;
 function updateWheelDisplay() {
   tempoWheel.setAttribute("aria-valuenow", String(state.bpm));
   tempoWheel.style.setProperty("--wheel-angle", `${wheelAngle}deg`);
+}
+
+function rampBarsFromSpeed(speed: number) {
+  const clamped = Math.min(100, Math.max(1, speed));
+  if (clamped >= 100) {
+    return 0;
+  }
+  const ratio = (100 - clamped) / 99;
+  return Math.max(2, Math.round(ratio * 32));
+}
+
+function layoutGridColumns() {
+  const beatsPerBar = TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar;
+  const denominator = DENOMINATORS[state.timeSignatureDenominatorIndex];
+  const perBeat = SUBDIVISIONS[state.subdivisionIndex].perBeat;
+  const isCompound = denominator === 8 && beatsPerBar % 3 === 0;
+  const groupSize = isCompound ? 3 : beatsPerBar;
+  const columns = Math.max(1, groupSize * perBeat);
+  subdivisionGrid.style.setProperty("--grid-columns", String(columns));
 }
 
 function readThemePreference(): ThemePreference {
@@ -833,8 +860,12 @@ function setupControls() {
     render();
   });
 
-  randomMuteGradualToggle.addEventListener("change", () => {
-    state.randomMuteGradual = randomMuteGradualToggle.checked;
+  randomMuteRampInput.addEventListener("input", () => {
+    const nextValue = Number(randomMuteRampInput.value);
+    if (!Number.isFinite(nextValue)) {
+      return;
+    }
+    state.randomMuteRampSpeed = Math.min(100, Math.max(1, Math.round(nextValue)));
     state.randomMuteConfigured = true;
     render();
   });
