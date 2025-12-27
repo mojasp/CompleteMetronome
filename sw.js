@@ -1,4 +1,4 @@
-const CACHE_NAME = "metronome-static-v1";
+const CACHE_NAME = "metronome-static-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -35,6 +35,19 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") {
+    return;
+  }
+
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
     return;
   }
 
