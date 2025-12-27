@@ -13,7 +13,7 @@ Features:
 * Loudness slider to increase the volume on mobile devices with a weak speaker.
 * Trainer: Increase tempo every x bars / seconds.
 * Random mute: randomly mute any subdivisions to train your internal pulse.
-* Accent every xth bar - This can help to check that you have not lost the form.
+* Accent every xth bar - This can help to check that you have not lost the form when practicing a tune.
 
 No runtime dependencies except for capacitor for android builds; no backend.
 Everything is html, css and vanilla typescript.
