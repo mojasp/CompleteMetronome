@@ -66,7 +66,7 @@ function collectSampleIds(profile: SoundProfile | undefined) {
   const ids = new Set<string>();
   const tones = [profile.accent, profile.regular];
   tones.forEach((tone) => {
-    if (tone.preset === "sampled") {
+    if (tone.preset === "sampled" || tone.preset === "sampled-cut") {
       ids.add(resolveSampleId(tone));
     }
   });
@@ -260,6 +260,7 @@ function createSampledClick(
   time: number,
   tone: SoundProfileTone,
   outputNode: AudioNode,
+  cut: boolean,
 ) {
   const sampleId = resolveSampleId(tone);
   const buffer = getSampleBuffer(audioCtx, sampleId);
@@ -272,7 +273,29 @@ function createSampledClick(
 
   const source = audioCtx.createBufferSource();
   source.buffer = buffer;
-  source.connect(gainNode).connect(outputNode);
+  if (cut) {
+    const highpass = audioCtx.createBiquadFilter();
+    highpass.type = "highpass";
+    highpass.frequency.setValueAtTime(LOUD_CLICK_HIGHPASS, time);
+
+    const drive = audioCtx.createGain();
+    drive.gain.setValueAtTime(LOUD_CLICK_DRIVE, time);
+
+    const shaper = audioCtx.createWaveShaper();
+    shaper.curve = getLoudClickCurve();
+    shaper.oversample = "4x";
+
+    const presence = audioCtx.createBiquadFilter();
+    presence.type = "peaking";
+    presence.frequency.setValueAtTime(LOUD_CLICK_PRESENCE_HZ, time);
+    presence.Q.value = 0.8;
+    presence.gain.value = LOUD_CLICK_PRESENCE_DB;
+
+    source.connect(gainNode).connect(highpass).connect(drive).connect(shaper).connect(presence);
+    presence.connect(outputNode);
+  } else {
+    source.connect(gainNode).connect(outputNode);
+  }
   source.start(time);
 }
 
@@ -291,7 +314,11 @@ function createClick(
   const profile = soundProfile || DEFAULT_SOUND_PROFILE;
   const tone = variant === "A" ? profile.accent : profile.regular;
   if (tone.preset === "sampled") {
-    createSampledClick(audioCtx, time, tone, outputNode);
+    createSampledClick(audioCtx, time, tone, outputNode, false);
+    return;
+  }
+  if (tone.preset === "sampled-cut") {
+    createSampledClick(audioCtx, time, tone, outputNode, true);
     return;
   }
   if (tone.preset === "loud") {
