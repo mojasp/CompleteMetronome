@@ -88,6 +88,19 @@ const faqDismissButtons = faqPanel?.querySelectorAll("[data-faq-dismiss]") ?? []
 const installFooterLink = document.querySelector(".footer-link--install") as HTMLAnchorElement | null;
 const installFooterDot = document.querySelector(".footer-dot--install") as HTMLSpanElement | null;
 
+type WakeLockSentinel = {
+  released: boolean;
+  release: () => Promise<void>;
+  addEventListener: (type: "release", listener: () => void) => void;
+};
+
+type WakeLock = {
+  request: (type: "screen") => Promise<WakeLockSentinel>;
+};
+
+const wakeLockApi = navigator as Navigator & { wakeLock?: WakeLock };
+let wakeLock: WakeLockSentinel | null = null;
+
 function updateFooterSuppression() {
   if (!appFooter) {
     return;
@@ -112,6 +125,33 @@ function hideInstallLinkForNative() {
   }
   installFooterLink?.remove();
   installFooterDot?.remove();
+}
+
+async function requestWakeLock() {
+  if (!wakeLockApi.wakeLock || document.visibilityState !== "visible") {
+    return;
+  }
+  try {
+    wakeLock = await wakeLockApi.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => {
+      wakeLock = null;
+    });
+  } catch (error) {
+    console.warn("Wake lock failed.", error);
+  }
+}
+
+async function releaseWakeLock() {
+  if (!wakeLock) {
+    return;
+  }
+  try {
+    await wakeLock.release();
+  } catch (error) {
+    console.warn("Wake lock release failed.", error);
+  } finally {
+    wakeLock = null;
+  }
 }
 
 type TimeSignature = {
@@ -1001,6 +1041,7 @@ async function togglePlayback() {
     state.isPlaying = false;
     audio.stop();
     stopTrainerInterval();
+    void releaseWakeLock();
     state.activeIndex = -1;
     state.barCount = 0;
     render();
@@ -1010,6 +1051,7 @@ async function togglePlayback() {
   state.isPlaying = true;
   try {
     await startPlayback();
+    void requestWakeLock();
   } catch (error) {
     console.warn("Failed to start audio playback.", error);
     state.isPlaying = false;
@@ -1376,6 +1418,11 @@ function setupControls() {
     }
     if (faqPanel?.classList.contains("is-open")) {
       setFaqOpen(false);
+    }
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && state.isPlaying) {
+      void requestWakeLock();
     }
   });
   updateSubdivisionsForTimeSignature(
