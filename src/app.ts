@@ -80,6 +80,19 @@ const denominatorTrigger = getElement<HTMLButtonElement>("denominator-trigger");
 const subdivisionTrigger = getElement<HTMLButtonElement>("subdivision-trigger");
 const subdivisionGrid = getElement<HTMLDivElement>("subdivision-grid");
 const beatGrid = getElement<HTMLDivElement>("beat-grid");
+const appFooter = document.querySelector(".app-footer") as HTMLDivElement | null;
+const footerHideButton = document.getElementById("footer-hide") as HTMLButtonElement | null;
+
+function updateFooterSuppression() {
+  if (!appFooter) {
+    return;
+  }
+  const shouldSuppress =
+    trainerPanel.classList.contains("is-open") ||
+    randomMutePanel.classList.contains("is-open") ||
+    randomMuteCountInPanel.classList.contains("is-open");
+  appFooter.classList.toggle("is-suppressed", shouldSuppress);
+}
 
 type TimeSignature = {
   label: string;
@@ -1185,6 +1198,7 @@ function closeRandomMuteCountInPanel() {
   randomMuteCountInDisclosure.setAttribute("aria-expanded", "false");
   randomMuteCountInControls.classList.remove("is-open");
   randomMuteCountInWheelPicker?.close();
+  updateFooterSuppression();
 }
 
 function openRandomMuteCountInPanel() {
@@ -1193,6 +1207,7 @@ function openRandomMuteCountInPanel() {
   randomMuteCountInDisclosure.setAttribute("aria-expanded", "true");
   randomMuteCountInControls.classList.add("is-open");
   randomMuteCountInWheelPicker?.open();
+  updateFooterSuppression();
 }
 
 function attachWheelControls() {
@@ -1296,6 +1311,23 @@ function attachWheelControls() {
 }
 
 function setupControls() {
+  const FOOTER_HIDE_KEY = "footerLinksHidden";
+
+  const applyFooterHiddenState = () => {
+    if (!appFooter) {
+      return;
+    }
+    const isHidden = sessionStorage.getItem(FOOTER_HIDE_KEY) === "true";
+    appFooter.classList.toggle("is-hidden", isHidden);
+  };
+
+  applyFooterHiddenState();
+  updateFooterSuppression();
+
+  footerHideButton?.addEventListener("click", () => {
+    sessionStorage.setItem(FOOTER_HIDE_KEY, "true");
+    applyFooterHiddenState();
+  });
   updateSubdivisionsForTimeSignature(
     DENOMINATORS[state.timeSignatureDenominatorIndex],
     TIME_SIGNATURES[state.timeSignatureNumeratorIndex].beatsPerBar,
@@ -1570,6 +1602,7 @@ function setupControls() {
       trainerDisclosure.setAttribute("aria-expanded", "false");
       stopTrainerInterval();
       render();
+      updateFooterSuppression();
       return;
     }
     state.trainerEnabled = true;
@@ -1578,6 +1611,7 @@ function setupControls() {
     trainerDisclosure.setAttribute("aria-expanded", "true");
     startTrainerInterval();
     render();
+    updateFooterSuppression();
   });
 
   randomMuteDisclosure.addEventListener("click", () => {
@@ -1587,6 +1621,7 @@ function setupControls() {
       randomMutePanel.classList.remove("is-open");
       randomMuteDisclosure.setAttribute("aria-expanded", "false");
       render();
+      updateFooterSuppression();
       return;
     }
     state.randomMuteEnabled = true;
@@ -1594,6 +1629,7 @@ function setupControls() {
     randomMutePanel.classList.add("is-open");
     randomMuteDisclosure.setAttribute("aria-expanded", "true");
     render();
+    updateFooterSuppression();
   });
 
   randomMuteCountInDisclosure.addEventListener("click", () => {
