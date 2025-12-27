@@ -6,7 +6,7 @@ export type SoundProfileTone = {
   volume?: number;
   decay?: number;
   duration?: number;
-  preset?: "loud" | "stacked" | "sampled" | "sampled-cut";
+  preset?: "stacked" | "sampled" | "sampled-cut";
   sampleId?: string;
 };
 

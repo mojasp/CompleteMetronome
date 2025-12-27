@@ -182,15 +182,13 @@ function updateSubdivisionsForTimeSignature(denominator: number, beatsPerBar: nu
 const SOUND_PROFILES: SoundProfileOption[] = [
   {
     label: "Click",
-    accent: {
-      type: "sine",
-      frequency: 2150,
-      volume: 0.24,
-      decay: 0.028,
-      duration: 0.045,
-      preset: "stacked",
-    },
-    regular: { type: "square", frequency: 1700, volume: 0.2, decay: 0.025, duration: 0.04 },
+    accent: { preset: "sampled", sampleId: "assets/click-sampled-accent.wav", volume: 0.9 },
+    regular: { preset: "sampled", sampleId: "assets/click-sampled.wav", volume: 0.75 },
+  },
+  {
+    label: "Loud",
+    accent: { preset: "sampled-cut", sampleId: "assets/click-sampled-accent.wav", volume: 0.85 },
+    regular: { preset: "sampled-cut", sampleId: "assets/click-sampled.wav", volume: 0.7 },
   },
   {
     label: "Wood",
@@ -211,39 +209,6 @@ const SOUND_PROFILES: SoundProfileOption[] = [
     label: "Sharp",
     accent: { type: "square", frequency: 1800, volume: 0.2, decay: 0.03, duration: 0.04 },
     regular: { type: "square", frequency: 1200, volume: 0.13, decay: 0.03, duration: 0.04 },
-  },
-  {
-    label: "Loud",
-    accent: {
-      type: "square",
-      frequency: 2600,
-      volume: 0.26,
-      decay: 0.03,
-      duration: 0.05,
-      preset: "loud",
-    },
-    regular: {
-      type: "square",
-      frequency: 2200,
-      volume: 0.22,
-      decay: 0.03,
-      duration: 0.05,
-      preset: "loud",
-    },
-  },
-  {
-    label: "Sampled",
-    accent: { preset: "sampled", sampleId: "assets/click-sampled-accent.wav", volume: 0.9 },
-    regular: { preset: "sampled", sampleId: "assets/click-sampled.wav", volume: 0.75 },
-  },
-  {
-    label: "Sampled (cut)",
-    accent: {
-      preset: "sampled-cut",
-      sampleId: "assets/click-sampled-accent.wav",
-      volume: 0.85,
-    },
-    regular: { preset: "sampled-cut", sampleId: "assets/click-sampled.wav", volume: 0.7 },
   },
 ];
 

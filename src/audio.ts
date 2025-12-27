@@ -113,75 +113,6 @@ async function preloadSampleBuffers(ctx: AudioContext, sampleIds: string[]) {
   await Promise.all(sampleIds.map((sampleId) => loadSampleBuffer(ctx, sampleId)));
 }
 
-function createLoudClick(
-  audioCtx: AudioContext,
-  time: number,
-  tone: SoundProfileTone,
-  outputNode: AudioNode,
-  noiseBuffer: AudioBuffer,
-) {
-  const decay = tone.decay ?? 0.03;
-  const duration = tone.duration ?? 0.05;
-  const baseFrequency = tone.frequency ?? 2400;
-  const baseGain = (tone.volume ?? 0.22) * CLICK_GAIN_MULTIPLIER;
-
-  const clickBus = audioCtx.createGain();
-  clickBus.gain.setValueAtTime(1, time);
-
-  const toneGain = audioCtx.createGain();
-  toneGain.gain.setValueAtTime(0.0001, time);
-  toneGain.gain.exponentialRampToValueAtTime(baseGain * 1.4, time + 0.0012);
-  toneGain.gain.exponentialRampToValueAtTime(0.0001, time + Math.max(0.018, decay));
-
-  const osc = audioCtx.createOscillator();
-  osc.type = tone.type ?? "square";
-  osc.frequency.setValueAtTime(baseFrequency * 1.2, time);
-  osc.frequency.exponentialRampToValueAtTime(baseFrequency, time + 0.018);
-  osc.connect(toneGain).connect(clickBus);
-  osc.start(time);
-  osc.stop(time + duration);
-
-  const noiseSource = audioCtx.createBufferSource();
-  noiseSource.buffer = noiseBuffer;
-
-  const snapFilter = audioCtx.createBiquadFilter();
-  snapFilter.type = "bandpass";
-  snapFilter.frequency.setValueAtTime(baseFrequency * 1.6, time);
-  snapFilter.Q.value = 0.9;
-
-  const snapHighpass = audioCtx.createBiquadFilter();
-  snapHighpass.type = "highpass";
-  snapHighpass.frequency.setValueAtTime(1400, time);
-
-  const snapGain = audioCtx.createGain();
-  snapGain.gain.setValueAtTime(0.0001, time);
-  snapGain.gain.exponentialRampToValueAtTime(baseGain * 1.15, time + 0.0006);
-  snapGain.gain.exponentialRampToValueAtTime(0.0001, time + Math.min(0.012, decay));
-
-  noiseSource.connect(snapFilter).connect(snapHighpass).connect(snapGain).connect(clickBus);
-  noiseSource.start(time);
-  noiseSource.stop(time + Math.min(0.02, duration));
-
-  const highpass = audioCtx.createBiquadFilter();
-  highpass.type = "highpass";
-  highpass.frequency.setValueAtTime(LOUD_CLICK_HIGHPASS, time);
-
-  const drive = audioCtx.createGain();
-  drive.gain.setValueAtTime(LOUD_CLICK_DRIVE, time);
-
-  const shaper = audioCtx.createWaveShaper();
-  shaper.curve = getLoudClickCurve();
-  shaper.oversample = "4x";
-
-  const presence = audioCtx.createBiquadFilter();
-  presence.type = "peaking";
-  presence.frequency.setValueAtTime(LOUD_CLICK_PRESENCE_HZ, time);
-  presence.Q.value = 0.8;
-  presence.gain.value = LOUD_CLICK_PRESENCE_DB;
-
-  clickBus.connect(highpass).connect(drive).connect(shaper).connect(presence).connect(outputNode);
-}
-
 function createStackedClick(
   audioCtx: AudioContext,
   time: number,
@@ -319,10 +250,6 @@ function createClick(
   }
   if (tone.preset === "sampled-cut") {
     createSampledClick(audioCtx, time, tone, outputNode, true);
-    return;
-  }
-  if (tone.preset === "loud") {
-    createLoudClick(audioCtx, time, tone, outputNode, noiseBuffer);
     return;
   }
   if (tone.preset === "stacked") {
