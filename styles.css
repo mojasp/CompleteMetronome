@@ -1122,6 +1122,10 @@ select {
   pointer-events: none;
 }
 
+.accent-controls.is-countin-open .accent-disclosure {
+  pointer-events: none;
+}
+
 .accent-disclosure {
   border: 1px solid var(--border);
   border-radius: 12px;

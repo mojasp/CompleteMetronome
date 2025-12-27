@@ -339,6 +339,7 @@ let accentWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let accentCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let randomMuteCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let subdivisionWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
+let accentCountInClosedAt = 0;
 
 function totalSubdivisions() {
   return SUBDIVISIONS[state.subdivisionIndex].totalSubdivisions;
@@ -1183,6 +1184,9 @@ function closeAccentCountInPanel() {
   accentCountInDisclosure.setAttribute("aria-expanded", "false");
   accentCountInControls.classList.remove("is-open");
   accentCountInWheelPicker?.close();
+  accentCountInClosedAt = performance.now();
+  accentControls.classList.remove("is-countin-open");
+  accentDisclosure.removeAttribute("aria-disabled");
 }
 
 function openAccentCountInPanel() {
@@ -1191,6 +1195,9 @@ function openAccentCountInPanel() {
   accentCountInDisclosure.setAttribute("aria-expanded", "true");
   accentCountInControls.classList.add("is-open");
   accentCountInWheelPicker?.open();
+  accentCountInClosedAt = 0;
+  accentControls.classList.add("is-countin-open");
+  accentDisclosure.setAttribute("aria-disabled", "true");
 }
 
 function closeRandomMuteCountInPanel() {
@@ -1646,6 +1653,12 @@ function setupControls() {
   });
 
   accentDisclosure.addEventListener("click", () => {
+    if (accentCountInPanel.classList.contains("is-open")) {
+      return;
+    }
+    if (accentCountInClosedAt && performance.now() - accentCountInClosedAt < 300) {
+      return;
+    }
     if (state.accentEnabled) {
       state.accentEnabled = false;
       closeAccentPanel();
