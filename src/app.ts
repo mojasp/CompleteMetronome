@@ -233,12 +233,16 @@ const SOUND_PROFILES: SoundProfileOption[] = [
   },
   {
     label: "Sampled",
-    accent: { preset: "sampled", sampleId: "assets/click-sampled.wav", volume: 0.9 },
+    accent: { preset: "sampled", sampleId: "assets/click-sampled-accent.wav", volume: 0.9 },
     regular: { preset: "sampled", sampleId: "assets/click-sampled.wav", volume: 0.75 },
   },
   {
     label: "Sampled (cut)",
-    accent: { preset: "sampled-cut", sampleId: "assets/click-sampled.wav", volume: 0.85 },
+    accent: {
+      preset: "sampled-cut",
+      sampleId: "assets/click-sampled-accent.wav",
+      volume: 0.85,
+    },
     regular: { preset: "sampled-cut", sampleId: "assets/click-sampled.wav", volume: 0.7 },
   },
 ];
