@@ -231,6 +231,11 @@ const SOUND_PROFILES: SoundProfileOption[] = [
       preset: "loud",
     },
   },
+  {
+    label: "Sampled",
+    accent: { preset: "sampled", sampleId: "assets/click-sampled.wav", volume: 0.9 },
+    regular: { preset: "sampled", sampleId: "assets/click-sampled.wav", volume: 0.75 },
+  },
 ];
 
 const BPM_MIN = 20;
@@ -339,6 +344,8 @@ let accentWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let accentCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let randomMuteCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let subdivisionWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
+let accentCountInClosedAt = 0;
+let accentCountInGuardTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function totalSubdivisions() {
   return SUBDIVISIONS[state.subdivisionIndex].totalSubdivisions;
@@ -687,6 +694,8 @@ function createWheelPicker({
   });
 
   picker.addEventListener("click", (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     const target = event.target;
     if (!(target instanceof HTMLButtonElement)) {
       return;
@@ -737,20 +746,22 @@ function createWheelPicker({
 
   picker.addEventListener(
     "touchend",
-    () => {
+    (event: TouchEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
       if (touchMoved || !touchTarget) {
         return;
       }
       const index = Number(touchTarget.dataset.index);
-    if (!Number.isFinite(index)) {
-      return;
-    }
-    suppressScroll = true;
-    setIndex(index);
-    onSelect?.();
-    close();
-  },
-    { passive: true },
+      if (!Number.isFinite(index)) {
+        return;
+      }
+      suppressScroll = true;
+      setIndex(index);
+      onSelect?.();
+      close();
+    },
+    { passive: false },
   );
 
   picker.addEventListener("scroll", () => {
@@ -1183,6 +1194,18 @@ function closeAccentCountInPanel() {
   accentCountInDisclosure.setAttribute("aria-expanded", "false");
   accentCountInControls.classList.remove("is-open");
   accentCountInWheelPicker?.close();
+  accentCountInClosedAt = performance.now();
+  accentControls.classList.remove("is-countin-open");
+  accentControls.classList.add("is-countin-guard");
+  accentDisclosure.setAttribute("aria-disabled", "true");
+  if (accentCountInGuardTimeout) {
+    clearTimeout(accentCountInGuardTimeout);
+  }
+  accentCountInGuardTimeout = setTimeout(() => {
+    accentControls.classList.remove("is-countin-guard");
+    accentDisclosure.removeAttribute("aria-disabled");
+    accentCountInGuardTimeout = null;
+  }, 500);
 }
 
 function openAccentCountInPanel() {
@@ -1191,6 +1214,14 @@ function openAccentCountInPanel() {
   accentCountInDisclosure.setAttribute("aria-expanded", "true");
   accentCountInControls.classList.add("is-open");
   accentCountInWheelPicker?.open();
+  accentCountInClosedAt = 0;
+  accentControls.classList.add("is-countin-open");
+  accentDisclosure.setAttribute("aria-disabled", "true");
+  accentControls.classList.remove("is-countin-guard");
+  if (accentCountInGuardTimeout) {
+    clearTimeout(accentCountInGuardTimeout);
+    accentCountInGuardTimeout = null;
+  }
 }
 
 function closeRandomMuteCountInPanel() {
@@ -1646,6 +1677,12 @@ function setupControls() {
   });
 
   accentDisclosure.addEventListener("click", () => {
+    if (accentCountInPanel.classList.contains("is-open")) {
+      return;
+    }
+    if (accentCountInClosedAt && performance.now() - accentCountInClosedAt < 300) {
+      return;
+    }
     if (state.accentEnabled) {
       state.accentEnabled = false;
       closeAccentPanel();

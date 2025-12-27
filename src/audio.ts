@@ -13,12 +13,20 @@ const LOUD_CLICK_DRIVE = 2.6;
 const LOUD_CLICK_PRESENCE_DB = 6;
 const LOUD_CLICK_HIGHPASS = 650;
 const LOUD_CLICK_PRESENCE_HZ = 3200;
+const DEFAULT_SAMPLED_CLICK_ID = "assets/click-sampled.wav";
 const DEFAULT_SOUND_PROFILE: SoundProfile = {
   accent: { type: "triangle", frequency: 1200, volume: 0.18, decay: 0.055, duration: 0.07 },
   regular: { type: "triangle", frequency: 760, volume: 0.13, decay: 0.055, duration: 0.07 },
 };
 
 let loudClickCurve: Float32Array<ArrayBuffer> | null = null;
+let sampleCache:
+  | {
+      ctx: AudioContext;
+      buffers: Map<string, AudioBuffer>;
+      inflight: Map<string, Promise<AudioBuffer>>;
+    }
+  | null = null;
 
 function getLoudClickCurve() {
   if (loudClickCurve) {
@@ -34,6 +42,75 @@ function getLoudClickCurve() {
   }
   loudClickCurve = curve;
   return curve;
+}
+
+function getSampleCache(ctx: AudioContext) {
+  if (!sampleCache || sampleCache.ctx !== ctx) {
+    sampleCache = {
+      ctx,
+      buffers: new Map(),
+      inflight: new Map(),
+    };
+  }
+  return sampleCache;
+}
+
+function resolveSampleId(tone: SoundProfileTone) {
+  return tone.sampleId ?? DEFAULT_SAMPLED_CLICK_ID;
+}
+
+function collectSampleIds(profile: SoundProfile | undefined) {
+  if (!profile) {
+    return [];
+  }
+  const ids = new Set<string>();
+  const tones = [profile.accent, profile.regular];
+  tones.forEach((tone) => {
+    if (tone.preset === "sampled") {
+      ids.add(resolveSampleId(tone));
+    }
+  });
+  return Array.from(ids);
+}
+
+function getSampleBuffer(ctx: AudioContext, sampleId: string) {
+  const cache = getSampleCache(ctx);
+  return cache.buffers.get(sampleId) ?? null;
+}
+
+async function loadSampleBuffer(ctx: AudioContext, sampleId: string) {
+  const cache = getSampleCache(ctx);
+  const existing = cache.buffers.get(sampleId);
+  if (existing) {
+    return existing;
+  }
+  const inflight = cache.inflight.get(sampleId);
+  if (inflight) {
+    return inflight;
+  }
+  const promise = (async () => {
+    const response = await fetch(sampleId);
+    if (!response.ok) {
+      throw new Error(`Failed to load sample: ${sampleId}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = await ctx.decodeAudioData(arrayBuffer);
+    cache.buffers.set(sampleId, buffer);
+    cache.inflight.delete(sampleId);
+    return buffer;
+  })().catch((error) => {
+    cache.inflight.delete(sampleId);
+    throw error;
+  });
+  cache.inflight.set(sampleId, promise);
+  return promise;
+}
+
+async function preloadSampleBuffers(ctx: AudioContext, sampleIds: string[]) {
+  if (!sampleIds.length) {
+    return;
+  }
+  await Promise.all(sampleIds.map((sampleId) => loadSampleBuffer(ctx, sampleId)));
 }
 
 function createLoudClick(
@@ -178,6 +255,27 @@ function createStackedClick(
   stackedGain.connect(outputNode);
 }
 
+function createSampledClick(
+  audioCtx: AudioContext,
+  time: number,
+  tone: SoundProfileTone,
+  outputNode: AudioNode,
+) {
+  const sampleId = resolveSampleId(tone);
+  const buffer = getSampleBuffer(audioCtx, sampleId);
+  if (!buffer) {
+    return;
+  }
+  const gainValue = (tone.volume ?? 1) * CLICK_GAIN_MULTIPLIER;
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.setValueAtTime(gainValue, time);
+
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(gainNode).connect(outputNode);
+  source.start(time);
+}
+
 function createClick(
   audioCtx: AudioContext,
   time: number,
@@ -192,6 +290,10 @@ function createClick(
 
   const profile = soundProfile || DEFAULT_SOUND_PROFILE;
   const tone = variant === "A" ? profile.accent : profile.regular;
+  if (tone.preset === "sampled") {
+    createSampledClick(audioCtx, time, tone, outputNode);
+    return;
+  }
   if (tone.preset === "loud") {
     createLoudClick(audioCtx, time, tone, outputNode, noiseBuffer);
     return;
@@ -384,6 +486,11 @@ export function createMetronomeAudio(): MetronomeAudio {
       if (ctx.state === "suspended" || ctx.state === "interrupted") {
         await ctx.resume();
       }
+      try {
+        await preloadSampleBuffers(ctx, collectSampleIds(nextSoundProfile));
+      } catch (error) {
+        console.warn("Failed to preload sampled clicks.", error);
+      }
       bpm = nextBpm;
       beatsPerBar = nextBeatsPerBar;
       subdivisionsPerBeat = nextSubdivisions;
@@ -427,6 +534,11 @@ export function createMetronomeAudio(): MetronomeAudio {
       soundProfile = nextSoundProfile ?? soundProfile;
       volume = nextVolume ?? volume;
       applyVolume();
+      if (audioCtx && nextSoundProfile) {
+        void preloadSampleBuffers(audioCtx, collectSampleIds(nextSoundProfile)).catch((error) => {
+          console.warn("Failed to preload sampled clicks.", error);
+        });
+      }
     },
   };
 }
