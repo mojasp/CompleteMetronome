@@ -78,7 +78,10 @@ Open the native project:
 bun run cap:open
 ```
 
-Update the app ID/name in `capacitor.config.ts` before publishing.
+Checklist before building & publishing an android app:
+
+* Update the version in gradle
+* Update the cache name in the service worker `sw.js`
 
 ## Available commands
 
