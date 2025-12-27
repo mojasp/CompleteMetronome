@@ -18,13 +18,13 @@ Features:
 No runtime dependencies except for capacitor for android builds; no backend.
 Everything is html, css and vanilla typescript.
 
-**Disclaimer**: The proceeding part of this readme, as well as the rest of the
-codebase, are heavily vibecoded. If you read further, know that you are reading
+**Disclaimer**: The following part of this readme as well as the rest of the
+codebase are heavily vibecoded. If you read further, know that you are reading
 the output of a computer program: do not seek structure or meaning. I do not
 advocate the use of LLM's - nothing was learned, no knowledge gained in the
-developpment of this software. In a way, i regret this. But I am not a web
+developpment of this piece of software. In a way, i regret this. But I am not a web
 developer, and my previous metronome app introduced pop-up ads. This one
-will never have them.
+will never have ads.
 
 ## License
 
