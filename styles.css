@@ -1172,6 +1172,10 @@ select {
   color: var(--ink-soft);
 }
 
+.accent-countin-inner > span {
+  white-space: nowrap;
+}
+
 .accent-countin-inner .wheel-field--accent-countin {
   min-width: 44px;
 }
