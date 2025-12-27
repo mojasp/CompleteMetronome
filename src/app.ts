@@ -368,7 +368,7 @@ function render() {
   }
   const trainerBars = TRAINER_BARS[state.trainerBarsIndex];
   const trainerStep = TRAINER_BPM_STEPS[state.trainerBpmIndex];
-  trainerDisclosure.textContent = state.trainerConfigured
+  trainerDisclosure.textContent = state.trainerEnabled && state.trainerConfigured
     ? state.trainerMode === "seconds"
       ? `Trainer: +${TRAINER_BPM_STEPS[state.trainerSecondsBpmIndex]} BPM every ${
           TRAINER_SECONDS[state.trainerSecondsIndex]
@@ -378,7 +378,7 @@ function render() {
   trainerDisclosure.classList.toggle("is-enabled", state.trainerEnabled);
   trainerDisclosure.classList.toggle("is-disabled", !state.trainerEnabled);
   const randomMutePercent = RANDOM_MUTE_PERCENTS[state.randomMutePercentIndex];
-  randomMuteDisclosure.textContent = state.randomMuteConfigured
+  randomMuteDisclosure.textContent = state.randomMuteEnabled && state.randomMuteConfigured
     ? `Random mute: ${randomMutePercent}%`
     : "Random mute";
   randomMuteDisclosure.classList.toggle("is-enabled", state.randomMuteEnabled);
