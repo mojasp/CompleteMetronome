@@ -119,6 +119,79 @@ h1 {
   width: min(960px, 100%);
 }
 
+.install-page {
+  user-select: text;
+}
+
+.install-shell {
+  width: min(820px, 100%);
+  gap: 18px;
+}
+
+.install-hero {
+  display: grid;
+  gap: 6px;
+}
+
+.install-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.install-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+
+.install-card h2 {
+  font-family: var(--font-display);
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.install-steps {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+}
+
+.install-text {
+  margin: 0 0 8px;
+  color: var(--ink-soft);
+}
+
+.install-links {
+  margin: 0 0 12px;
+}
+
+.install-link {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-muted);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.install-link:hover {
+  color: var(--ink-soft);
+  border-color: var(--border);
+}
+
+.install-note {
+  margin: 10px 0 0;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.install-footer-note {
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
 .app-footer {
   width: min(960px, 100%);
   margin: 32px auto 0;
@@ -155,6 +228,13 @@ h1 {
 .footer-link:hover {
   color: var(--ink-soft);
   border-color: var(--border-muted);
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .footer-link--install,
+  .footer-dot--install {
+    display: none;
+  }
 }
 
 .footer-dot {

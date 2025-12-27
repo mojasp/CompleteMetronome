@@ -4,7 +4,7 @@ import { join } from "path";
 const root = process.cwd();
 const distDir = join(root, "dist");
 
-const files = ["index.html", "styles.css", "manifest.webmanifest", "sw.js"];
+const files = ["index.html", "install.html", "styles.css", "manifest.webmanifest", "sw.js"];
 
 async function fileExists(path: string) {
   try {

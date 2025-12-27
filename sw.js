@@ -2,6 +2,7 @@ const CACHE_NAME = "metronome-static-v2";
 const ASSETS = [
   "./",
   "./index.html",
+  "./install.html",
   "./styles.css",
   "./app.js",
   "./manifest.webmanifest",
