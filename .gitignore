@@ -1,6 +1,7 @@
 dist/
 node_modules/
 android/.gradle/
+android/keystore.properties
 android/build/
 android/app/build/
 android/capacitor.settings.gradle
