@@ -4,6 +4,7 @@ android/.gradle/
 android/keystore.properties
 android/build/
 android/app/build/
+android/app/release/
 android/capacitor.settings.gradle
 android/local.properties
 android/.idea/
