@@ -82,6 +82,8 @@ const subdivisionGrid = getElement<HTMLDivElement>("subdivision-grid");
 const beatGrid = getElement<HTMLDivElement>("beat-grid");
 const appFooter = document.querySelector(".app-footer") as HTMLDivElement | null;
 const footerHideButton = document.getElementById("footer-hide") as HTMLButtonElement | null;
+const installFooterLink = document.querySelector(".footer-link--install") as HTMLAnchorElement | null;
+const installFooterDot = document.querySelector(".footer-dot--install") as HTMLSpanElement | null;
 
 function updateFooterSuppression() {
   if (!appFooter) {
@@ -92,6 +94,21 @@ function updateFooterSuppression() {
     randomMutePanel.classList.contains("is-open") ||
     randomMuteCountInPanel.classList.contains("is-open");
   appFooter.classList.toggle("is-suppressed", shouldSuppress);
+}
+
+function isNativeCapacitor() {
+  const capacitor = window as typeof window & {
+    Capacitor?: { isNativePlatform?: () => boolean };
+  };
+  return Boolean(capacitor.Capacitor?.isNativePlatform?.());
+}
+
+function hideInstallLinkForNative() {
+  if (!isNativeCapacitor()) {
+    return;
+  }
+  installFooterLink?.remove();
+  installFooterDot?.remove();
 }
 
 type TimeSignature = {
@@ -1328,6 +1345,7 @@ function setupControls() {
 
   applyFooterHiddenState();
   updateFooterSuppression();
+  hideInstallLinkForNative();
 
   footerHideButton?.addEventListener("click", () => {
     sessionStorage.setItem(FOOTER_HIDE_KEY, "true");
