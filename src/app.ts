@@ -82,6 +82,9 @@ const subdivisionGrid = getElement<HTMLDivElement>("subdivision-grid");
 const beatGrid = getElement<HTMLDivElement>("beat-grid");
 const appFooter = document.querySelector(".app-footer") as HTMLDivElement | null;
 const footerHideButton = document.getElementById("footer-hide") as HTMLButtonElement | null;
+const faqToggleButton = document.getElementById("faq-toggle") as HTMLButtonElement | null;
+const faqPanel = document.getElementById("faq-panel") as HTMLDivElement | null;
+const faqDismissButtons = faqPanel?.querySelectorAll("[data-faq-dismiss]") ?? [];
 const installFooterLink = document.querySelector(".footer-link--install") as HTMLAnchorElement | null;
 const installFooterDot = document.querySelector(".footer-dot--install") as HTMLSpanElement | null;
 
@@ -1334,6 +1337,18 @@ function attachWheelControls() {
 
 function setupControls() {
   const FOOTER_HIDE_KEY = "footerLinksHidden";
+  const setFaqOpen = (isOpen: boolean) => {
+    if (!faqPanel) {
+      return;
+    }
+    faqPanel.classList.toggle("is-open", isOpen);
+    faqPanel.setAttribute("aria-hidden", String(!isOpen));
+    if (isOpen) {
+      faqPanel.querySelector<HTMLElement>(".faq-panel__close")?.focus();
+    } else {
+      faqToggleButton?.focus();
+    }
+  };
 
   const applyFooterHiddenState = () => {
     if (!appFooter) {
@@ -1350,6 +1365,18 @@ function setupControls() {
   footerHideButton?.addEventListener("click", () => {
     sessionStorage.setItem(FOOTER_HIDE_KEY, "true");
     applyFooterHiddenState();
+  });
+  faqToggleButton?.addEventListener("click", () => setFaqOpen(true));
+  faqDismissButtons.forEach((button) => {
+    button.addEventListener("click", () => setFaqOpen(false));
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") {
+      return;
+    }
+    if (faqPanel?.classList.contains("is-open")) {
+      setFaqOpen(false);
+    }
   });
   updateSubdivisionsForTimeSignature(
     DENOMINATORS[state.timeSignatureDenominatorIndex],

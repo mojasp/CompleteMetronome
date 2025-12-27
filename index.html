@@ -431,27 +431,52 @@
       </section>
     </main>
     <footer class="app-footer">
-      <a
-        class="footer-link"
-        href="https://github.com/mojasp/CompleteMetronome"
-        target="_blank"
-        rel="noreferrer"
-      >
-        Source
-      </a>
-      <span class="footer-dot" aria-hidden="true">·</span>
-      <a class="footer-link footer-link--install" href="install.html">Install</a>
-      <span class="footer-dot footer-dot--install" aria-hidden="true">·</span>
-      <a
-        class="footer-link"
-        href="https://github.com/mojasp/CompleteMetronome/blob/master/LICENSE"
-        target="_blank"
-        rel="noreferrer"
-      >
-        AGPL
-      </a>
-      <button class="footer-hide" id="footer-hide" type="button">Hide</button>
+      <div class="footer-links">
+        <button class="footer-link footer-link--button" id="faq-toggle" type="button">FAQ</button>
+        <span class="footer-dot" aria-hidden="true">·</span>
+        <a
+          class="footer-link"
+          href="https://github.com/mojasp/CompleteMetronome"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Source
+        </a>
+        <span class="footer-dot" aria-hidden="true">·</span>
+        <a class="footer-link footer-link--install" href="install.html">Install</a>
+        <span class="footer-dot footer-dot--install" aria-hidden="true">·</span>
+        <a
+          class="footer-link"
+          href="https://github.com/mojasp/CompleteMetronome/blob/master/LICENSE"
+          target="_blank"
+          rel="noreferrer"
+        >
+          AGPL
+        </a>
+        <button class="footer-hide" id="footer-hide" type="button">Hide</button>
+      </div>
     </footer>
+
+    <div class="faq-panel" id="faq-panel" aria-hidden="true">
+      <div class="faq-panel__backdrop" data-faq-dismiss></div>
+      <div class="faq-panel__content" role="dialog" aria-modal="true" aria-labelledby="faq-title">
+        <div class="faq-panel__header">
+          <h2 class="faq-panel__title" id="faq-title">FAQ</h2>
+          <button class="faq-panel__close" type="button" data-faq-dismiss>Close</button>
+        </div>
+        <dl class="faq-panel__list">
+          <dt>How to accent on every bar?</dt>
+          <dd>Click the buttons highlighting each beat in the bar to mute.</dd>
+          <dt>How to set the wheel to a specific BPM?</dt>
+          <dd>There are small +/- buttons left to the wheel.</dd>
+          <dt>How to make the metronome run while the screen is locked, or the app is in the background?</dt>
+          <dd>
+            This is only possible with the Android app. As of now, there is no iOS app
+            because Apple mandates a 100 EUR/year subscription to publish apps on the App Store.
+          </dd>
+        </dl>
+      </div>
+    </div>
 
     <script type="module" src="app.js"></script>
     <script>
