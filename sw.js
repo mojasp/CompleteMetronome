@@ -1,4 +1,4 @@
-const CACHE_NAME = "metronome-static-v2";
+const CACHE_NAME = "metronome-static-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -41,23 +41,32 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-          return response;
-        })
-        .catch(() => caches.match(request))
+      caches.match(request).then((cached) => {
+        const fetchPromise = fetch(request)
+          .then((response) => {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+            return response;
+          })
+          .catch(() => undefined);
+        if (cached) {
+          event.waitUntil(fetchPromise);
+          return cached;
+        }
+        return fetchPromise.then((response) => response || cached);
+      })
     );
+    return;
+  }
+
+  const requestUrl = new URL(request.url);
+  if (requestUrl.origin !== self.location.origin) {
     return;
   }
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-      return fetch(request).then((response) => {
+      const fetchPromise = fetch(request).then((response) => {
         if (!response || response.status !== 200 || response.type !== "basic") {
           return response;
         }
@@ -65,6 +74,11 @@ self.addEventListener("fetch", (event) => {
         caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
         return response;
       });
+      if (cached) {
+        event.waitUntil(fetchPromise.catch(() => undefined));
+        return cached;
+      }
+      return fetchPromise;
     })
   );
 });
