@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Complete Metronome</string>
     <string name="title_activity_main">Complete Metronome</string>
-    <string name="package_name">com.simplemetronome.app</string>
-    <string name="custom_url_scheme">com.simplemetronome.app</string>
+    <string name="package_name">com.completemetronome.app</string>
+    <string name="custom_url_scheme">com.completemetronome.app</string>
 </resources>

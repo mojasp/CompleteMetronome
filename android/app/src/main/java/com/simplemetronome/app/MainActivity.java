@@ -1,4 +1,4 @@
-package com.simplemetronome.app;
+package com.completemetronome.app;
 
 import com.getcapacitor.BridgeActivity;
 
