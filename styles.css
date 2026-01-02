@@ -361,6 +361,15 @@ h1 {
   color: var(--ink-muted);
 }
 
+.faq-panel__version {
+  margin: 10px 0 0;
+  font-size: 0.6rem;
+  color: var(--ink-muted);
+  opacity: 0.55;
+  text-align: right;
+  letter-spacing: 0.04em;
+}
+
 @media (max-width: 720px) {
   .app-footer {
     flex-direction: column;
