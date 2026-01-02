@@ -380,6 +380,7 @@ let randomMuteCountInWheelPicker: ReturnType<typeof createWheelPicker> | null = 
 let subdivisionWheelPicker: ReturnType<typeof createWheelPicker> | null = null;
 let accentCountInClosedAt = 0;
 let accentCountInGuardTimeout: ReturnType<typeof setTimeout> | null = null;
+const ACCENT_COUNTIN_GUARD_MS = 600;
 
 function totalSubdivisions() {
   return SUBDIVISIONS[state.subdivisionIndex].totalSubdivisions;
@@ -1234,14 +1235,16 @@ function closeAccentCountInPanel() {
   accentControls.classList.remove("is-countin-open");
   accentControls.classList.add("is-countin-guard");
   accentDisclosure.setAttribute("aria-disabled", "true");
+  accentDisclosure.disabled = true;
   if (accentCountInGuardTimeout) {
     clearTimeout(accentCountInGuardTimeout);
   }
   accentCountInGuardTimeout = setTimeout(() => {
     accentControls.classList.remove("is-countin-guard");
     accentDisclosure.removeAttribute("aria-disabled");
+    accentDisclosure.disabled = false;
     accentCountInGuardTimeout = null;
-  }, 500);
+  }, ACCENT_COUNTIN_GUARD_MS);
 }
 
 function openAccentCountInPanel() {
@@ -1253,6 +1256,7 @@ function openAccentCountInPanel() {
   accentCountInClosedAt = 0;
   accentControls.classList.add("is-countin-open");
   accentDisclosure.setAttribute("aria-disabled", "true");
+  accentDisclosure.disabled = true;
   accentControls.classList.remove("is-countin-guard");
   if (accentCountInGuardTimeout) {
     clearTimeout(accentCountInGuardTimeout);
@@ -1746,7 +1750,10 @@ function setupControls() {
     if (accentCountInPanel.classList.contains("is-open")) {
       return;
     }
-    if (accentCountInClosedAt && performance.now() - accentCountInClosedAt < 300) {
+    if (
+      accentCountInClosedAt &&
+      performance.now() - accentCountInClosedAt < ACCENT_COUNTIN_GUARD_MS
+    ) {
       return;
     }
     if (state.accentEnabled) {
